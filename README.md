@@ -11,3 +11,12 @@ Skapa docker-compose deploy control
 4. apply/deploy and stop
 5. live find running docker
 6. google material design
+
+
+
+# Testing
+
+To run tests, install pytest and run:
+```
+pytest test_docker_functions.py
+```

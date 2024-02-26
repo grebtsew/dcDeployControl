@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dcDeployControl</title>
+    <script type="text/javascript" src="./lib/vis-network.min.js"></script>
+    <link rel="stylesheet" href="./utils/styles.css">
+</head>
+<body>
+
+    <header>
+       <div>dcDeployControl</div>
+        <div id="clock"></div>
+    </header>
+
+    <main>
+       
+
+        <div id="control-panel">
+           
+            <div id="content">
+               
+            <h1>External</h1>
+            <div id="checkboxesDocker"> </div>
+            
+            <h1>Networks</h1>
+            <div id ="legend-container"> </div>
+            <h1>Containers</h1>
+            <div id="checkboxes"> </div>
+           
+            <button id="start-btn" onclick="startClicked()">Start</button>
+            <button id="stop-btn" onclick="stopClicked()">Stop</button>
+            <button id="shuffle-btn" onclick="reshuffleGraph()">Shuffle Network Graph</button>
+            </div>
+        <div id="drag-handle"></div>
+        </div>
+
+        <div id="graph-container">
+            <!-- Add your interactive graph here -->
+        </div>
+    </main>
+
+    <script src="./utils/script.js"></script>
+    <script>
+       document.addEventListener('DOMContentLoaded', function () {
+        const dragHandle = document.getElementById('drag-handle');
+        const controlPanel = document.getElementById('control-panel');
+
+        let isDragging = false;
+        let startX, startWidth;
+
+        dragHandle.addEventListener('mousedown', function (e) {
+            isDragging = true;
+            startX = e.pageX;
+            startWidth = controlPanel.offsetWidth;
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (isDragging) {
+                const newWidth = startWidth + (e.pageX - startX);
+                controlPanel.style.width = `${newWidth}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', function () {
+            isDragging = false;
+        });
+    });
+    </script>
+</body>
+</html>

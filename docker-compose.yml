@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  dcDeployControl:
+    image: grebtsew/dcdc
+    container_name: dcDeployControl
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "8000:8000"
+    volumes:
+      - ./example:/docker
+      - /var/run/docker.sock:/var/run/docker.sock
