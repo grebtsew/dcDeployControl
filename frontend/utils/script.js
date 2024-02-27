@@ -46,9 +46,10 @@ const dockerComposePath = {
 };
 
 
+var ignoreList = []
+
 // Create a network
 var container = document.getElementById("graph-container");
-
 var nodes = new vis.DataSet();
 var edges = new vis.DataSet();
 var data = {
@@ -57,14 +58,15 @@ var data = {
 };
 
 var options = {
-    min_width: '100%', // Set the width of the graph container
+    width: '100%', // Set the width of the graph container
     height: '1500px', // Set the height of the graph container
  
     nodes: {
-       // shape: 'dot', // Node shape (dot, ellipse, box, etc.)
+        //shape: 'dot', // Node shape (dot, ellipse, box, etc.)
         size: 40, // Node size
        
     },
+    
     edges: {
         width: 2, // Edge width
         color: 'gray', // Edge color
@@ -76,10 +78,13 @@ var options = {
     physics: {
         enabled: true, // Enable physics simulation
         barnesHut: {
-            gravitationalConstant: -80000,
+            gravitationalConstant: -20000,
+            centralGravity: 2,
+            springLength: 100,
             springConstant: 0.04,
-            springLength: 95
-        }
+            damping: 0.5,
+        
+          },
     },
     interaction: {
         hover: true, // Enable hover interactions
@@ -107,6 +112,40 @@ function addNodeToGraph(containerName) {
     }
 }
 
+function findSmallestNetwork(containers) {
+    // Create a map to store network occurrences
+    const networkCount = new Map();
+   
+    // Iterate through containers to count network occurrences
+    containers.forEach(({ networks_used }) => {
+        networks_used.forEach((network) => {
+        if (networkCount.has(network)) {
+          networkCount.set(network, networkCount.get(network) + 1);
+        } else {
+          networkCount.set(network, 1);
+        }
+      });
+    });
+  
+    // Iterate through containers to find the smallest network for each container
+    const result = containers.map(({ container_name, networks_used, labels_used }) => {
+      let smallestNetwork = networks_used[0];
+      let smallestNetworkCount = networkCount.get(networks_used[0]);
+  
+      networks_used.forEach((network) => {
+        const count = networkCount.get(network);
+        if (count < smallestNetworkCount) {
+          smallestNetwork = network;
+          smallestNetworkCount = count;
+        }
+      });
+  
+      return { container_name, smallestNetwork, labels_used };
+    });
+  
+    return result;
+  }
+
 function updateNodes(containers){
     const checkboxesContainer = document.getElementById('checkboxes');
 
@@ -116,16 +155,83 @@ function updateNodes(containers){
         // Create a list to hold checkboxes
         const checkboxList = document.createElement('ul');
 
+        const def_groups = findSmallestNetwork(containers);
+        
+        var use_defaults="false";
+
         containers.forEach(container => {
             // Create list item for checkbox
             const listItem = document.createElement('li');
+
+            var isDefault="false";
+          
+
+            // Set default group
+            var group="";
+            def_groups.forEach(c => {
+                if(c.container_name == container.container_name){
+                    group = c.smallestNetwork;
+                }
+            });
+
+            
+            // update ignore list
+            container.labels_used.forEach(lab => {
+                const keyValuePairs = lab.split('=');
+                const field = keyValuePairs[0];
+                const value = keyValuePairs[1];
+                if (field === "global-ignore"){
+                    if (!ignoreList.includes(value)) {
+                        ignoreList.push(value);
+                    }
+                    
+                }
+                if(field == "global-use-defaults"){
+                    use_defaults = value;
+                }
+                if (field === "default"){
+                    isDefault = value;
+                }
+
+                if ( field === "group"){
+                    group = value;
+                }
+
+
+            });
+
+            // create group
+            var _group = document.getElementById(`group-${group}`);
+           
+            if(_group === null){
+                _group = document.createElement(`details`);
+                _group.type = 'details';
+                _group.open = true;
+                _group.id = `group-${group}`;
+               
+                var summary = document.createElement('summary');
+                summary.textContent = `${group}`;
+
+                // Add the summary element to the details element
+                _group.appendChild(summary);
+
+                checkboxList.appendChild(_group);
+            }
 
             // Create checkbox
             const checkbox = document.createElement('input');
            
             checkbox.type = 'checkbox';
             checkbox.id =  `checkbox-container-${container.container_name}`;
-            checkbox.checked = true;
+
+
+            if (use_defaults === "true"){
+                checkbox.checked = isDefault === "true";
+            } else {
+                checkbox.checked = true;
+            }
+           
+
             checkbox.addEventListener('change', () => toggleContainerVisibility(container.container_name));
 
             // Create label for checkbox
@@ -138,16 +244,21 @@ function updateNodes(containers){
             listItem.appendChild(label);
 
             // Append list item to the checkbox list
-            checkboxList.appendChild(listItem);
+            _group.appendChild(listItem);
+
+            checkboxesContainer.appendChild(checkboxList);
 
             // Create node in the graph
             addNodeToGraph(container.container_name);
         });
-        checkboxesContainer.appendChild(checkboxList);
+        
 
         addEdgesBasedOnNetworks(containers);
 
-      
+        // only show defaults!
+        containers.forEach(container => {
+            toggleContainerVisibility(container.container_name);
+        });
 }
 
 function updateRunningNodes(_containers){
@@ -244,7 +355,7 @@ function updateRunningNodes(_containers){
 
         addEdgesBasedOnNetworks(running_unique);
 
-      
+  
 }
 
 
@@ -284,6 +395,9 @@ function addEdgesBasedOnNetworks(containerInfoList) {
 
 containerInfoList.forEach(container => {
     container.networks_used.forEach(network => {
+       if (!ignoreList.includes(network)){
+        
+
         // Find other containers using the same network
         const correlatedContainers = containerInfoList.filter(otherContainer =>
             otherContainer !== container &&
@@ -308,7 +422,7 @@ containerInfoList.forEach(container => {
                 addedEdges.add(edgeKey);
             }
         });
-    });
+}});
 });
     
   
@@ -479,7 +593,7 @@ async function getRunningContainers( ) {
             });
 
             const result = await response.json();
-            console.log(result);
+           // console.log(result);
             updateRunningNodes(result);
 
     } catch (error) {

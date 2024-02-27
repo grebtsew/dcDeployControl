@@ -9,8 +9,12 @@ services:
     networks:
       - frontend
       - backend
+      - all
     labels:
-      - "com.example.description=Web Application 1"
+      - "global-ignore=all"
+      - "global-use-defaults=true"
+      - "group=frontend"
+      - "default=true"
     ports:
       - "8081:80"
     restart: always
@@ -21,8 +25,9 @@ services:
     networks:
       - frontend
       - backend
+      - all
     labels:
-      - "com.example.description=Web Application 2"
+      - "group=frontend"
     ports:
       - "8082:80"
     restart: always
@@ -30,9 +35,13 @@ services:
   database1:
     container_name: database1
     image: postgres
+    labels:
+      - "group=database"
+      - "default=true"
     networks:
       - backend
       - database
+      - all
     environment:
       POSTGRES_DB: mydb1
       POSTGRES_USER: user1
@@ -42,9 +51,12 @@ services:
   database2:
     container_name: database2
     image: postgres
+    labels:
+      - "group=database"
     networks:
       - backend
       - database
+      - all
     environment:
       POSTGRES_DB: mydb2
       POSTGRES_USER: user2
@@ -54,33 +66,45 @@ services:
   worker1:
     container_name: worker1
     image: busybox
+    labels:
+      - "group=worker"
+      - "default=true"
     networks:
       - backend
       - worker
+      - all
     command: sleep 3600
     restart: always
 
   worker2:
     container_name: worker2
     image: busybox
+    labels:
+      - "group=worker"
     networks:
       - backend
       - worker
+      - all
     command: sleep 3600
     restart: always
 
   monitoring:
     container_name: monitoring
     image: prom/prometheus
+    labels:
+      - "group=monitoring"
     networks:
       - frontend
       - backend
       - monitoring
       - logging
       - cache
+      - all
     restart: always
 
   logging:
+    labels:
+        - "group=monitoring"
     container_name: logging
     image: fluentd
     networks:
@@ -88,6 +112,7 @@ services:
       - logging
       - monitoring
       - cache
+      - all
     restart: always
 
   cache:
@@ -96,6 +121,7 @@ services:
     networks:
       - backend
       - cache
+      - all
     restart: always
 
 networks:
@@ -106,3 +132,4 @@ networks:
   monitoring:
   logging:
   cache:
+  all:
