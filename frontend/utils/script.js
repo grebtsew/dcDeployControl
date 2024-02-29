@@ -9,6 +9,51 @@ function updateClock() {
 
 setInterval(updateClock, 1000);
 
+var flag = "";
+
+const iconClasses = ["fa fa-flag","fa fa-caret-down","fa fa-flag fa-fw","fa fa-rub fa-fw","fa fa-camera-retro fa-fw","fa fa-check-square fa-fw","fa fa-won fa-fw",
+"fa fa-play-circle fa-fw","fa fa-github fa-fw","fa fa-medkit fa-fw","fa fa-caret-down","fa fa-flag","fa fa-rub",
+"fa fa-ruble","fa fa-rouble","fa fa-pagelines",
+"fa fa-wheelchair","fa fa-vimeo-square","fa fa-try","fa fa-turkish-lira","fa fa-adjust","fa fa-anchor","fa fa-archive","fa fa-arrows"
+,"fa fa-arrows-h","fa fa-arrows-v","fa fa-asterisk","fa fa-ban","fa fa-barcode","fa fa-bars","fa fa-beer","fa fa-bell","fa fa-bolt","fa fa-book",
+"fa fa-bookmark","fa fa-briefcase","fa fa-bug","fa fa-bullhorn","fa fa-bullseye","fa fa-calendar","fa fa-camera",
+"fa fa-camera-retro","fa fa-certificate","fa fa-check",
+"fa fa-circle","fa fa-cloud","fa fa-cloud-download",
+"fa fa-cloud-upload","fa fa-code","fa fa-code-fork","fa fa-coffee","fa fa-cog","fa fa-cogs","fa fa-comment","fa fa-comments",
+"fa fa-compass","fa fa-credit-card","fa fa-crop","fa fa-crosshairs","fa fa-cutlery","fa fa-dashboard","fa fa-desktop","fa fa-download",
+"fa fa-edit","fa fa-ellipsis-h","fa fa-ellipsis-v","fa fa-envelope","fa fa-eraser","fa fa-exchange","fa fa-exclamation","fa fa-exclamation-circle",
+"fa fa-exclamation-triangle","fa fa-external-link","fa fa-external-link-square","fa fa-eye","fa fa-eye-slash","fa fa-female","fa fa-fighter-jet","fa fa-film",
+"fa fa-filter","fa fa-fire","fa fa-fire-extinguisher","fa fa-flag","fa fa-flag-checkered","fa fa-flash","fa fa-flask","fa fa-folder",
+"fa fa-folder-open","fa fa-gamepad","fa fa-gavel","fa fa-gear","fa fa-gears","fa fa-gift","fa fa-globe","fa fa-headphones",
+"fa fa-heart","fa fa-home","fa fa-inbox","fa fa-info","fa fa-info-circle","fa fa-key","fa fa-laptop","fa fa-leaf","fa fa-legal",
+"fa fa-level-down","fa fa-level-up","fa fa-location-arrow","fa fa-lock","fa fa-magic","fa fa-magnet","fa fa-mail-forward","fa fa-mail-reply","fa fa-mail-reply-all",
+"fa fa-male","fa fa-map-marker","fa fa-microphone","fa fa-microphone-slash","fa fa-minus","fa fa-minus-circle","fa fa-minus-square","fa fa-mobile",
+"fa fa-mobile-phone","fa fa-music","fa fa-pencil","fa fa-pencil-square","fa fa-phone","fa fa-phone-square","fa fa-plane",
+"fa fa-plus","fa fa-plus-circle","fa fa-plus-square","fa fa-power-off","fa fa-print","fa fa-puzzle-piece","fa fa-qrcode","fa fa-question","fa fa-question-circle",
+"fa fa-quote-left","fa fa-quote-right","fa fa-random","fa fa-refresh","fa fa-reply","fa fa-reply-all","fa fa-retweet","fa fa-road","fa fa-rocket","fa fa-rss","fa fa-rss-square","fa fa-search",
+"fa fa-search-minus","fa fa-search-plus","fa fa-share","fa fa-share-square","fa fa-shield","fa fa-shopping-cart","fa fa-sign-in","fa fa-signal","fa fa-sitemap",
+"fa fa-sort","fa fa-sort-alpha-asc","fa fa-sort-alpha-desc","fa fa-sort-amount-asc","fa fa-sort-amount-desc","fa fa-sort-asc","fa fa-sort-desc","fa fa-sort-down",
+"fa fa-sort-numeric-asc","fa fa-sort-numeric-desc","fa fa-sort-up","fa fa-spinner","fa fa-square","fa fa-star","fa fa-star-half","fa fa-star-half-full",
+"fa fa-subscript","fa fa-suitcase","fa fa-superscript","fa fa-tablet","fa fa-tachometer","fa fa-tag","fa fa-tags",
+"fa fa-tasks","fa fa-terminal","fa fa-thumb-tack","fa fa-thumbs-down","fa fa-thumbs-up","fa fa-ticket","fa fa-times","fa fa-times-circle",
+"fa fa-tint","fa fa-trophy","fa fa-truck","fa fa-umbrella",
+"fa fa-unlock","fa fa-unlock-alt","fa fa-unsorted","fa fa-upload","fa fa-user","fa fa-users","fa fa-video-camera","fa fa-volume-down","fa fa-volume-off","fa fa-volume-up","fa fa-warning",
+"fa fa-wheelchair","fa fa-wrench","fa fa-circle",
+"fa fa-plus-square","fa fa-square","fa fa-bitcoin","fa fa-btc","fa fa-cny","fa fa-dollar","fa fa-eur","fa fa-euro","fa fa-gbp","fa fa-inr",
+"fa fa-jpy","fa fa-krw","fa fa-money","fa fa-rmb","fa fa-rouble","fa fa-rub","fa fa-ruble","fa fa-rupee","fa fa-try","fa fa-turkish-lira","fa fa-usd","fa fa-won","fa fa-yen",
+"fa fa-align-center","fa fa-align-justify","fa fa-align-left","fa fa-align-right","fa fa-bold","fa fa-chain","fa fa-chain-broken","fa fa-clipboard","fa fa-columns","fa fa-copy",
+"fa fa-cut","fa fa-dedent","fa fa-eraser","fa fa-file","fa fa-font","fa fa-indent","fa fa-italic",
+"fa fa-link","fa fa-list","fa fa-list-alt","fa fa-list-ol","fa fa-list-ul","fa fa-outdent","fa fa-paperclip","fa fa-paste","fa fa-repeat","fa fa-rotate-left","fa fa-rotate-right","fa fa-save",
+"fa fa-scissors","fa fa-strikethrough","fa fa-table","fa fa-text-height","fa fa-text-width","fa fa-th","fa fa-th-large","fa fa-th-list","fa fa-underline","fa fa-undo","fa fa-unlink",
+"fa fa-angle-double-down","fa fa-angle-double-left","fa fa-angle-double-right","fa fa-angle-double-up","fa fa-angle-down","fa fa-angle-left","fa fa-angle-right","fa fa-angle-up","fa fa-arrow-circle-down",
+"fa fa-arrow-circle-left","fa fa-arrow-circle-right","fa fa-arrow-circle-up","fa fa-arrow-down",
+"fa fa-arrow-left","fa fa-arrow-right","fa fa-arrow-up","fa fa-arrows","fa fa-arrows-alt","fa fa-arrows-h","fa fa-arrows-v","fa fa-caret-down","fa fa-caret-left","fa fa-caret-right",
+,"fa fa-caret-up","fa fa-chevron-circle-down","fa fa-chevron-circle-left","fa fa-chevron-circle-right","fa fa-chevron-circle-up",
+"fa fa-chevron-down","fa fa-chevron-left","fa fa-chevron-right","fa fa-chevron-up","fa fa-long-arrow-down","fa fa-long-arrow-left",
+"fa fa-long-arrow-right","fa fa-long-arrow-up","fa fa-arrows-alt","fa fa-backward","fa fa-compress","fa fa-eject","fa fa-expand",
+"fa fa-fast-backward","fa fa-fast-forward","fa fa-forward","fa fa-pause","fa fa-play","fa fa-play-circle","fa fa-step-backward","fa fa-step-forward","fa fa-stop","fa fa-medkit","fa fa-plus-square","fa fa-stethoscope",
+"fa fa-user-md","fa fa-wheelchair","fa fa-flag","fa fa-maxcdn"];
+
 
 async function parseDockerCompose(data) {
     try {
@@ -33,6 +78,9 @@ async function parseDockerCompose(data) {
           // Update the legend based on the network colors
           updateLegend(networkColors);
 
+          showToast("Welcome!");
+          showToast("Docker-compose Parsed Successfully!", "green");
+
         return result;
     } catch (error) {
         console.error('An error occurred:', error.message);
@@ -45,6 +93,34 @@ const dockerComposePath = {
     file_path: '/docker/docker-compose.yml',
 };
 
+var darkmode_var=false;
+
+function darkmode(){
+    
+    darkmode_var = !darkmode_var;
+    var graph = document.getElementById("graph-container");
+    var header = document.getElementsByTagName("header")[0];
+    var body = document.getElementsByTagName("body")[0];
+    var control = document.getElementById("control-panel");
+    var drag = document.getElementById("drag-handle");
+    if (darkmode_var){
+        body.style.backgroundColor =  "#515151";
+        graph.style.backgroundColor =  "#515151";
+        header.style.backgroundColor = "#011b2d";
+        control.style.backgroundColor = "rgb(28, 28, 28)";
+        drag.style.backgroundColor = "#333"
+
+    } else {
+        graph.style.backgroundColor =  "#f0f0f0";
+        body.style.backgroundColor =  "#f0f0f0";
+        header.style.backgroundColor = "#333";
+        control.style.backgroundColor =  "rgb(181, 177, 177)";
+        drag.style.backgroundColor = "#ddd"
+    }
+
+}
+
+darkmode();
 
 var ignoreList = []
 
@@ -61,10 +137,18 @@ var options = {
     width: '100%', // Set the width of the graph container
     height: '1500px', // Set the height of the graph container
  
+   
+
     nodes: {
         //shape: 'dot', // Node shape (dot, ellipse, box, etc.)
         size: 40, // Node size
-       
+        shadow: {
+            enabled: true,
+            color: 'rgba(0, 0, 0, 0.5)',
+            size: 10,
+            x: 5,
+            y: 5,
+        },
     },
     
     edges: {
@@ -105,12 +189,31 @@ function addNodeToGraph(containerName) {
 
     // If the node doesn't exist, add it to the network
     if (!nodeExists) {
-        // Replace this with your actual logic to add a node to the graph
+        showToast(`${containerName} detected.`);
+
         nodes.add({ id: containerName, label: containerName });
 
     
     }
 }
+
+function getRandomIconClass() {
+    const randomIndex = Math.floor(Math.random() * iconClasses.length);
+    return iconClasses[randomIndex];
+}
+  
+function getRandomColor() {
+  // Generate random values for red, green, and blue components
+  const red = Math.floor(Math.random() * 200);
+  const green = Math.floor(Math.random() * 200);
+  const blue = Math.floor(Math.random() * 200);
+
+  // Combine the components to form a CSS color string
+  const color = `rgb(${red},${green},${blue})`;
+
+  return color;
+}
+
 
 function findSmallestNetwork(containers) {
     // Create a map to store network occurrences
@@ -152,8 +255,6 @@ function updateNodes(containers){
         // Clear existing content in case of multiple calls
         checkboxesContainer.innerHTML = '';
 
-        // Create a list to hold checkboxes
-        const checkboxList = document.createElement('ul');
 
         const def_groups = findSmallestNetwork(containers);
         
@@ -174,7 +275,6 @@ function updateNodes(containers){
                 }
             });
 
-            
             // update ignore list
             container.labels_used.forEach(lab => {
                 const keyValuePairs = lab.split('=');
@@ -200,53 +300,97 @@ function updateNodes(containers){
 
             });
 
+    const card = document.createElement('div');
+    card.classList.add('card');
+
+    // Create checkbox
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `checkbox-container-${container.container_name}`;
+
+    if (use_defaults === "true") {
+        checkbox.checked = isDefault === "true";
+    } else {
+        checkbox.checked = true;
+    }
+
+    checkbox.addEventListener('change', () => toggleContainerVisibility(container.container_name));
+
+    // Create title
+    const label = document.createElement('label');
+    label.htmlFor = `checkbox-container-${container.container_name}`;
+    label.appendChild(document.createTextNode(container.container_name));
+
+    // Create start button icon
+    const startButton = document.createElement('button');
+    startButton.innerHTML = '<i class="fa fa-play"></i>';
+    startButton.className ="smlbtn";
+    startButton.style.color='green';
+    startButton.addEventListener('click', () => startContainer(container));
+
+    // Create stop button icon
+    const stopButton = document.createElement('button');
+    stopButton.innerHTML = '<i class="fa fa-stop"></i> ';
+    stopButton.className ="smlbtn";
+    stopButton.style.color='red';
+    stopButton.addEventListener('click', () => stopContainer(container));
+
+   
+    const cardbuttoncontainer = document.createElement('div');
+    cardbuttoncontainer.className ="cardbuttoncontainer";
+
+ 
+    if (container.exposed_ports.length > 0){
+        const port =container.exposed_ports[0].split(':');
+       
+        // Create open website button
+        const openWebsiteButton = document.createElement('button');
+        openWebsiteButton.innerHTML = '<i class="fa fa-external-link"></i> ';
+        openWebsiteButton.className ="smlbtn";
+        openWebsiteButton.style.color='white';
+        openWebsiteButton.addEventListener('click', () => openWebsite(`http://localhost:${port[0]}`));
+        cardbuttoncontainer.appendChild(openWebsiteButton);
+    }
+    
+
+    // Append elements to card container
+    card.appendChild(checkbox);
+    card.appendChild(label);
+
+
+   
+    cardbuttoncontainer.appendChild(stopButton);
+    cardbuttoncontainer.appendChild(startButton);
+    
+    
+    card.appendChild(cardbuttoncontainer);
+    
+
             // create group
             var _group = document.getElementById(`group-${group}`);
            
             if(_group === null){
                 _group = document.createElement(`details`);
                 _group.type = 'details';
+
+                if(checkbox.checked){
                 _group.open = true;
+                }
                 _group.id = `group-${group}`;
-               
+              
                 var summary = document.createElement('summary');
                 summary.textContent = `${group}`;
 
                 // Add the summary element to the details element
                 _group.appendChild(summary);
 
-                checkboxList.appendChild(_group);
+                checkboxesContainer.appendChild(_group);
             }
 
-            // Create checkbox
-            const checkbox = document.createElement('input');
-           
-            checkbox.type = 'checkbox';
-            checkbox.id =  `checkbox-container-${container.container_name}`;
-
-
-            if (use_defaults === "true"){
-                checkbox.checked = isDefault === "true";
-            } else {
-                checkbox.checked = true;
-            }
-           
-
-            checkbox.addEventListener('change', () => toggleContainerVisibility(container.container_name));
-
-            // Create label for checkbox
-            const label = document.createElement('label');
-            label.htmlFor = `checkbox-container-${container.container_name}`;
-            label.appendChild(document.createTextNode(container.container_name));
-
-            // Append checkbox and label to list item
-            listItem.appendChild(checkbox);
-            listItem.appendChild(label);
 
             // Append list item to the checkbox list
-            _group.appendChild(listItem);
+            _group.appendChild(card);
 
-            checkboxesContainer.appendChild(checkboxList);
 
             // Create node in the graph
             addNodeToGraph(container.container_name);
@@ -259,6 +403,10 @@ function updateNodes(containers){
         containers.forEach(container => {
             toggleContainerVisibility(container.container_name);
         });
+}
+
+function openWebsite(url) {
+    window.open(url, '_blank');
 }
 
 function updateRunningNodes(_containers){
@@ -288,7 +436,10 @@ function updateRunningNodes(_containers){
                         if (label) {
                             label.style.color = 'red'; // Change the color to your desired color
                         }
-                       
+
+                        if(node.color != 'red'){
+                        showToast(`${c.container_name} is not running.`, "red");
+                    }
                         node.color = 'red';
                         nodes.update(node);
                     }
@@ -298,35 +449,39 @@ function updateRunningNodes(_containers){
         }
 
         // Create a list to hold checkboxes
-        const checkboxList = document.createElement('ul');
+       
         var running_unique = [];
         _containers.forEach(container => {
             const isNotInList = containers.every(obj => obj.container_name !== container.container_name);
             if (isNotInList) {
+               
                 running_unique.push(container);
+                
+                
+                
             // Create list item for checkbox
-            const listItem = document.createElement('li');
-
+            const card = document.createElement('div');
+            card.classList.add('card-network');
+        
             // Create checkbox
             const checkbox = document.createElement('input');
-           
             checkbox.type = 'checkbox';
-            checkbox.id =  `checkbox-container-${container.container_name}`;
-            checkbox.checked = true;
+            checkbox.id = `checkbox-container-${container.container_name}`;
+                checkbox.checked = true;
             checkbox.addEventListener('change', () => toggleContainerVisibility(container.container_name));
 
-            // Create label for checkbox
+            
+
+            // Create title
             const label = document.createElement('label');
             label.htmlFor = `checkbox-container-${container.container_name}`;
             label.appendChild(document.createTextNode(container.container_name));
+        
+            // Append elements to card container
+            card.appendChild(checkbox);
+            card.appendChild(label);
 
-            // Append checkbox and label to list item
-            listItem.appendChild(checkbox);
-            listItem.appendChild(label);
-
-            // Append list item to the checkbox list
-            checkboxList.appendChild(listItem);
-
+            checkboxesContainer.appendChild(card);
             // Create node in the graph
             addNodeToGraph(container.container_name);
             } else {
@@ -342,7 +497,9 @@ function updateRunningNodes(_containers){
                         if (label) {
                             label.style.color = 'green'; // Change the color to your desired color
                         }
-                       
+                        if(node.color != 'green'){
+                            showToast(`${container.container_name} is running.`, "green");
+                        }
                         node.color = 'green';
                         nodes.update(node);
                     }
@@ -351,11 +508,7 @@ function updateRunningNodes(_containers){
             }
         });
     
-        checkboxesContainer.appendChild(checkboxList);
-
         addEdgesBasedOnNetworks(running_unique);
-
-  
 }
 
 
@@ -377,10 +530,16 @@ function reshuffleGraph() {
         network.moveNode(id, newPosition.x, newPosition.y);
     });
 }
-
-function addEdgesBasedOnNetworks(containerInfoList) {
+function buildFlag(){
+    const checkbox = document.getElementById('build');
+    if (checkbox.checked){
+        flag = "--build"
+    } else {
+        flag = ""
+    }
     
-
+}
+function addEdgesBasedOnNetworks(containerInfoList) {
     // Iterate over containers to generate network colors
     containerInfoList.forEach(container => {
         container.networks_used.forEach(network => {
@@ -450,26 +609,34 @@ function updateLegend(networkColors) {
     // Clear existing content in case of multiple calls
     legendContainer.innerHTML = '';
 
+
     // Create legend items with checkboxes
     for (const [network, color] of Object.entries(networkColors)) {
         const legendItem = document.createElement('div');
 
-        // Create checkbox
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = true; // You can set the default state as needed
-        checkbox.id = `checkbox-${network}`;
-        checkbox.addEventListener('change', () => toggleNetworkVisibility(network));
+            const card = document.createElement('div');
+            card.classList.add('card-network');
+        
+            // Create checkbox
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = true; // You can set the default state as needed
+            checkbox.id = `checkbox-${network}`;
+            checkbox.addEventListener('change', () => toggleNetworkVisibility(network));
+        
+            // Create title
+            const label = document.createElement('label');
+            label.htmlFor = `checkbox-${network}`;
+            label.appendChild(document.createTextNode(network));
+            label.style.color = color;
+        
+            // Append elements to card container
+            card.appendChild(checkbox);
+            card.appendChild(label);
 
-        // Create label for the checkbox
-        const label = document.createElement('label');
-        label.htmlFor = `checkbox-${network}`;
-        label.appendChild(document.createTextNode(network));
-        label.style.color = color;
+            legendItem.appendChild(card);
 
-        // Append checkbox and label to legend item
-        legendItem.appendChild(checkbox);
-        legendItem.appendChild(label);
+
 
         // Append legend item to the legend container
         legendContainer.appendChild(legendItem);
@@ -510,30 +677,118 @@ function toggleNetworkVisibility(network) {
 
 }
 
+
+function buildClicked(){
+    // start all
+
+    try {
+        showToast("Started building all containers...");
+        
+
+        // Send a request to the backend to start the container
+        const startResponse = fetch('http://localhost:8000/build-all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                docker_compose_path: dockerComposePath.file_path,
+                container: "",
+                flags: flag
+            }),
+        });
+
+        
+    } catch (error) {
+    console.error(`An error occurred: ${error.message}`);
+    throw error;
+    }
+
+}
+
+
 function startClicked(){
+    // start all
+    
+
+    var tmp = [];
     containers.forEach(container => {
         const checkbox = document.getElementById(`checkbox-container-${container.container_name}`);
         if(checkbox.checked === true){
-            startContainer(container);
+            tmp.push({
+                docker_compose_path: dockerComposePath.file_path,
+                container: container.container_name,
+                flags: flag
+            });
         }
       
     });
+
+    if(tmp.length == 0){
+        return;
+    }
+    showToast("Starting selected containers...");
+    try {
+            
+        // Send a request to the backend to start the container
+        const startResponse = fetch('http://localhost:8000/start-containers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(tmp),
+        });
+
+    } catch (error) {
+    console.error(`An error occurred: ${error.message}`);
+    throw error;
+    }
 }
 
 function stopClicked(){
-    containers.forEach(container => {
-        const checkbox = document.getElementById(`checkbox-container-${container.container_name}`);
-        if(checkbox.checked === true){
-            stopContainer(container);
-        }
-      
-    });
+ // stop clicked
+ 
+ var tmp = [];
+ containers.forEach(container => {
+     const checkbox = document.getElementById(`checkbox-container-${container.container_name}`);
+     if(checkbox.checked === true){
+         tmp.push({
+             docker_compose_path: dockerComposePath.file_path,
+             container: container.container_name,
+             flags: flag
+         });
+     }
+   
+ });
+
+ if(tmp.length == 0){
+    return;
+}
+showToast("Stopping selected containers...");
+
+ try {
+         
+
+     // Send a request to the backend to start the container
+     const startResponse = fetch('http://localhost:8000/stop-containers', {
+         method: 'POST',
+         headers: {
+             'Content-Type': 'application/json',
+         },
+         body: JSON.stringify(tmp),
+     });
+
+ } catch (error) {
+ console.error(`An error occurred: ${error.message}`);
+ throw error;
+ }
+
 }
 
 async function stopContainer( containerToStop) {
     try {
-        
-            console.log(`Stopping container: ${containerToStop.container_name}`);
+        showToast(`Stopping container: ${containerToStop.container_name}`);
+      
 
             // Send a request to the backend to start the container
             const startResponse = await fetch('http://localhost:8000/stop-container', {
@@ -544,6 +799,7 @@ async function stopContainer( containerToStop) {
                 body: JSON.stringify({
                     docker_compose_path: dockerComposePath.file_path,
                     container: containerToStop.container_name,
+                    flags: flag
                 }),
             });
 
@@ -556,8 +812,7 @@ async function stopContainer( containerToStop) {
 
 async function startContainer( containerToStart) {
     try {
-        
-            console.log(`Starting container: ${containerToStart.container_name}`);
+        showToast(`Starting container: ${containerToStart.container_name}`);
 
             // Send a request to the backend to start the container
             const startResponse = await fetch('http://localhost:8000/start-container', {
@@ -568,6 +823,7 @@ async function startContainer( containerToStart) {
                 body: JSON.stringify({
                     docker_compose_path: dockerComposePath.file_path,
                     container: containerToStart.container_name,
+                    flags: flag
                 }),
             });
 
@@ -582,7 +838,6 @@ async function startContainer( containerToStart) {
 async function getRunningContainers( ) {
     try {
         
-
             // Send a request to the backend to start the container
             const response = await fetch('http://localhost:8000/get-running-containers-with-networks', {
                 method: 'GET',
@@ -601,7 +856,61 @@ async function getRunningContainers( ) {
         throw error;
     }
 }
-
 setInterval(() => {
     getRunningContainers();
 }, 10000);
+
+
+
+function showToast(message, color = "blue") {
+    // Check if the browser supports the Notification API
+    let toast = Toastify({
+      text: message,
+      duration: 3000,  // 3 seconds
+      gravity: "bottom",  // or "bottom"
+      position: "right",  // or "left", "right"
+      backgroundColor: color
+  }).showToast();
+  
+  }
+
+
+
+
+  function Select(arg) {
+      
+      const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="checkbox-container-"]');
+      
+      checkboxes.forEach(checkbox => {
+          
+          if (arg === None){
+            checkbox.checked = false;
+          }
+
+          if (arg === "all"){
+            checkbox.checked = true;
+          }
+          if (arg == "default"){
+            const containerName = checkbox.id.replace('checkbox-container-', '');
+            checkbox.checked = false;
+            containers.forEach(container => {
+                if(container.container_name == containerName){
+                    container.labels_used.forEach(lab => {
+                        const keyValuePairs = lab.split('=');
+                        const field = keyValuePairs[0];
+                        const value = keyValuePairs[1];
+                     
+                        if (field === "default"){
+                            checkbox.checked = true;
+                        } 
+        
+                });
+            }
+           
+            });
+          }
+          checkbox.dispatchEvent(new Event('change'));
+          
+      });
+  }
+  

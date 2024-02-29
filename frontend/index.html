@@ -6,6 +6,9 @@
     <title>dcDeployControl</title>
     <script type="text/javascript" src="./lib/vis-network.min.js"></script>
     <link rel="stylesheet" href="./utils/styles.css">
+    <link rel="stylesheet" type="text/css" href="./lib/toastify.css">
+    <link rel="stylesheet" href="./lib/all.min.css">
+    <script type="text/javascript" src="./lib/toastify.js"></script>
 </head>
 <body>
 
@@ -21,17 +24,36 @@
            
             <div id="content">
                
+            <h1>Tools</h1>
+           
+            <button class="smlbtn" onclick="reshuffleGraph()" ><i class="fa fa-random"  style="color: white;"> </i> Shuffle </button>
+            <button class="smlbtn" onclick="buildClicked()" ><i class="fas fa-cogs"></i> Build All Containers </button>
+            <div class="card-network">
+                <input id="build" type="checkbox" onclick="buildFlag()">
+                <label for="build">Build on Run <i class="fas fa-cogs"></i> </label>
+            </div>
+            <div class="card-network">
+                <input id="dark" type="checkbox" onclick="darkmode()" checked="true">
+                <label for="dark">DarkMode <i class="dark-icon fas fa-moon"></i> </label>
+            </div>
+
             <h1>External</h1>
             <div id="checkboxesDocker"> </div>
             
             <h1>Networks</h1>
             <div id ="legend-container"> </div>
+
             <h1>Containers</h1>
+            Select:
+            <button class="smlbtn" id="None" onclick="Select(None)" >None </button>
+            <button class="smlbtn" onclick="Select('all')" >All </button>
+            <button class="smlbtn" onclick="Select('default')" >Default </button>
+            
             <div id="checkboxes"> </div>
            
-            <button id="start-btn" onclick="startClicked()">Start</button>
-            <button id="stop-btn" onclick="stopClicked()">Stop</button>
-            <button id="shuffle-btn" onclick="reshuffleGraph()">Shuffle Network Graph</button>
+            <button id="start-btn" onclick="startClicked()" ><i class="fa fa-play" style="color: green;"></i>  Run Selected</button>
+            <button id="stop-btn" onclick="stopClicked()"><i class="fa fa-stop"  style="color: red;"></i>  Stop Selected</button>
+           
             </div>
         
         </div>
@@ -77,6 +99,10 @@
         isDragging = false;
     });
 });
+
+window.addEventListener('resize', function() {
+            network.setSize('100%', '2000px');
+        });
     </script>
 </body>
 </html>

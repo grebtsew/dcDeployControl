@@ -28,6 +28,7 @@ class DockerComposeInfo(BaseModel):
 class StartContainer(BaseModel):
     docker_compose_path: str
     container: str
+    flags: str
 
 class ContainerStatus(BaseModel):
     container_name: str
@@ -36,6 +37,7 @@ class ContainerInfo(BaseModel):
     container_name: str
     networks_used: List[str]
     labels_used: List[str]
+    exposed_ports: List[str]
 
 @app.post("/parse-docker-compose", response_model=List[ContainerInfo])
 async def parse_docker_compose(data: DockerComposeInfo):
@@ -51,9 +53,22 @@ async def parse_docker_compose(data: DockerComposeInfo):
                 container_name = service_name
                 networks_used = service_config.get('networks', [])
                 labels_used = service_config.get('labels', [])
-                container_info_list.append(ContainerInfo(container_name=container_name, networks_used=networks_used, labels_used=labels_used))
+                exposed_ports = service_config.get('ports', [])
+                container_info_list.append(ContainerInfo(container_name=container_name, networks_used=networks_used, labels_used=labels_used, exposed_ports=exposed_ports))
 
         return container_info_list
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
+@app.post("/build-all", response_model=bool)
+async def build_all(data: StartContainer):
+    try:
+        docker_compose_path = data.docker_compose_path
+
+        print(f"Running build all.")
+        subprocess.run(['docker-compose', '-f', docker_compose_path, 'build'])
+        return True
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
@@ -70,11 +85,38 @@ async def start_container(data: StartContainer):
 
         if 'services' in compose_data and container_name in compose_data['services']:
             print(f"Starting container: {container_name}")
-            subprocess.run(['docker-compose', '-f', docker_compose_path, 'up', '-d', container_name])
+            val = ['docker-compose', '-f', docker_compose_path, 'up', '-d']
+            if(data.flags != ''):
+                val.append(data.flags)
+
+            val.append(container_name)
+
+            subprocess.run(val)
             return True
         else:
             print(f"Container '{container_name}' not found in the Docker Compose file.")
             return False
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+    
+@app.post("/start-containers", response_model=bool)
+async def start_containers(dataList: List[StartContainer]):
+    try:
+        containers = [] 
+        for data in dataList:
+            containers.append(data.container)
+
+        docker_compose_path = dataList[0].docker_compose_path
+
+        print(f"Starting containers: {containers}")
+        val =['docker-compose', '-f', docker_compose_path, 'up', '-d']
+        if(data.flags != ''):
+            val.append(dataList[0].flags)
+        val.extend(containers)
+       
+        subprocess.run(val)
+        return True
+       
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
@@ -99,7 +141,7 @@ async def get_running_containers_with_networks():
 
         for container in all_containers:
             if container.status == 'running':
-                running_containers.append(ContainerInfo(container_name=container.name, networks_used=get_container_networks(container), labels_used=[]))
+                running_containers.append(ContainerInfo(container_name=container.name, networks_used=get_container_networks(container), labels_used=[], exposed_ports=[]))
 
         return running_containers
     except Exception as e:
@@ -136,6 +178,25 @@ async def stop_container(data: StartContainer):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
+
+@app.post("/stop-containers", response_model=bool)
+async def stop_containers(dataList: List[StartContainer]):
+    try:
+        containers = [] 
+        for data in dataList:
+            containers.append(data.container)
+
+        docker_compose_path = dataList[0].docker_compose_path
+
+        print(f"Stopping containers: {containers}")
+        val =['docker-compose', '-f', docker_compose_path, 'stop']
+        val.extend(containers)
+       
+        subprocess.run(val)
+        return True
+       
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 if __name__ == "__main__":
     import uvicorn

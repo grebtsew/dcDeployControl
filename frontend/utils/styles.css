@@ -3,6 +3,101 @@ body {
     overflow: hidden;
 }
 
+details {
+    display: inline-block;
+    border: 1px solid #333;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px;
+    max-height: fit-content;
+    transition: max-height 0.3s ease-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+summary {
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.card-network{
+
+    display: inline-block;
+    align-items: center;
+    padding: 7px;
+    margin: 5px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff05;
+}
+
+#legend-container{
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly; 
+}
+
+.card {
+    min-width: 250px;
+   
+    align-items: center;
+  
+    padding: 7px;
+    margin: 5px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff05;
+}
+
+.card input[type="checkbox"] {
+    margin-right: 10px;
+    float: left;
+}
+
+.cardbuttoncontainer{
+    float:right;
+}
+
+.card button {
+    float: right;
+    width: 20px;
+    height: 20px;
+    padding: 0px;
+    margin-bottom: 0px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Additional styling for button icons */
+.card button i {
+    margin-right: 5px;
+    float: right;
+}
+
+
+details:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+button:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.smlbtn:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Optional: Hover effect */
+.card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.card-network:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
 header {
     background-color: #333;
     color: white;
@@ -49,7 +144,9 @@ h1 {
     text-align: center;
 }
 
+
 #control-panel {
+    width: 350px;
     height: 10%;
     background-color: #f0f0f0;
     overflow: hidden;
@@ -57,6 +154,10 @@ h1 {
     display: flex;
     padding-top: 20px;
     padding-right:10px;
+    align-items: center;
+    justify-content: center;
+    min-width: 300px;
+    text-align: center;
 }
 
 
@@ -75,14 +176,20 @@ h1 {
     padding-left: 10px; /* Adjust padding based on drag handle width */
 }
 
-#content {
-    height: 100vh;
-    overflow: auto;
-    padding-left: 10px; /* Adjust padding based on drag handle width */
-}
+
 
 #checkboxes {
     margin-bottom: 10px;
+}
+
+#shuffle-btn{
+    width: auto;
+
+}
+
+.smlbtn{
+    width:auto;
+    display: inline-block;
 }
 
 button {
