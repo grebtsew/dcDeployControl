@@ -16,7 +16,7 @@ services:
       - "group=frontend"
       - "default=true"
     ports:
-      - "8081:80"
+      - "127.0.0.1:8081:80"
     restart: always
 
   webapp2:

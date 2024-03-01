@@ -25,9 +25,12 @@
             <div id="content">
                
             <h1>Tools</h1>
+
+          
            
             <button class="smlbtn" onclick="reshuffleGraph()" ><i class="fa fa-random"  style="color: white;"> </i> Shuffle </button>
             <button class="smlbtn" onclick="buildClicked()" ><i class="fas fa-cogs"></i> Build All Containers </button>
+            <button class="smlbtn" onclick="clearClicked()" ><i class="fas fa-times"></i> Clear </button>
             <div class="card-network">
                 <input id="build" type="checkbox" onclick="buildFlag()">
                 <label for="build">Build on Run <i class="fas fa-cogs"></i> </label>
@@ -100,8 +103,14 @@
     });
 });
 
+
+let  resizeTimer;
 window.addEventListener('resize', function() {
-            network.setSize('100%', '2000px');
+    
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+        location.reload();
+    }, 500);
         });
     </script>
 </body>

@@ -107,7 +107,7 @@ function darkmode(){
         body.style.backgroundColor =  "#515151";
         graph.style.backgroundColor =  "#515151";
         header.style.backgroundColor = "#011b2d";
-        control.style.backgroundColor = "rgb(28, 28, 28)";
+        control.style.backgroundColor = "rgb(63, 63, 66)";
         drag.style.backgroundColor = "#333"
 
     } else {
@@ -342,13 +342,19 @@ function updateNodes(containers){
  
     if (container.exposed_ports.length > 0){
         const port =container.exposed_ports[0].split(':');
-       
+        var p = "";
+        if (port.length == 3){
+            p = port[1];
+        } else {
+            p = port[0];
+        }
+
         // Create open website button
         const openWebsiteButton = document.createElement('button');
         openWebsiteButton.innerHTML = '<i class="fa fa-external-link"></i> ';
         openWebsiteButton.className ="smlbtn";
         openWebsiteButton.style.color='white';
-        openWebsiteButton.addEventListener('click', () => openWebsite(`http://localhost:${port[0]}`));
+        openWebsiteButton.addEventListener('click', () => openWebsite(`http://localhost:${p}`));
         cardbuttoncontainer.appendChild(openWebsiteButton);
     }
     
@@ -357,14 +363,20 @@ function updateNodes(containers){
     card.appendChild(checkbox);
     card.appendChild(label);
 
-
+    const loader = document.createElement('div');
+    loader.className = `loader`;
+    loader.id = `loader-${container.container_name}`;
+    loader.hidden=true;
+            
    
+
+
     cardbuttoncontainer.appendChild(stopButton);
     cardbuttoncontainer.appendChild(startButton);
     
     
     card.appendChild(cardbuttoncontainer);
-    
+    card.appendChild(loader);
 
             // create group
             var _group = document.getElementById(`group-${group}`);
@@ -439,7 +451,9 @@ function updateRunningNodes(_containers){
 
                         if(node.color != 'red'){
                         showToast(`${c.container_name} is not running.`, "red");
-                    }
+                        const loader = document.getElementById(`loader-${c.container_name}`);
+                        loader.hidden=true;
+                        }
                         node.color = 'red';
                         nodes.update(node);
                     }
@@ -499,6 +513,10 @@ function updateRunningNodes(_containers){
                         }
                         if(node.color != 'green'){
                             showToast(`${container.container_name} is running.`, "green");
+                           
+                                const loader = document.getElementById(`loader-${container.container_name}`);
+                                loader.hidden=true;
+                        
                         }
                         node.color = 'green';
                         nodes.update(node);
@@ -629,14 +647,14 @@ function updateLegend(networkColors) {
             label.htmlFor = `checkbox-${network}`;
             label.appendChild(document.createTextNode(network));
             label.style.color = color;
-        
+
+            
             // Append elements to card container
             card.appendChild(checkbox);
             card.appendChild(label);
+            
 
             legendItem.appendChild(card);
-
-
 
         // Append legend item to the legend container
         legendContainer.appendChild(legendItem);
@@ -677,13 +695,49 @@ function toggleNetworkVisibility(network) {
 
 }
 
+function clearClicked(){
+    // start all
+
+    try {
+        showToast("Clearing docker-compose...");
+
+        containers.forEach(container => {
+            const checkboxLabel = document.getElementById(`checkbox-container-${container.container_name}`);
+            const label = checkboxLabel.nextElementSibling;
+            if (label.style.color != 'red'){
+                const loader = document.getElementById(`loader-${container.container_name}`);
+                loader.hidden=false;
+            }
+        });
+        
+
+        // Send a request to the backend to start the container
+        const startResponse = fetch('http://localhost:8000/clear', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                docker_compose_path: dockerComposePath.file_path,
+                container: "",
+                flags: flag
+            }),
+        });
+
+        
+    } catch (error) {
+    console.error(`An error occurred: ${error.message}`);
+    throw error;
+    }
+
+}
 
 function buildClicked(){
     // start all
 
     try {
         showToast("Started building all containers...");
-        
+       
 
         // Send a request to the backend to start the container
         const startResponse = fetch('http://localhost:8000/build-all', {
@@ -709,12 +763,19 @@ function buildClicked(){
 
 function startClicked(){
     // start all
-    
+ 
 
     var tmp = [];
     containers.forEach(container => {
         const checkbox = document.getElementById(`checkbox-container-${container.container_name}`);
+       
+        
         if(checkbox.checked === true){
+            const label = checkbox.nextElementSibling;
+            if (label.style.color != 'green'){
+                const loader = document.getElementById(`loader-${container.container_name}`);
+                loader.hidden=false;
+            }
             tmp.push({
                 docker_compose_path: dockerComposePath.file_path,
                 container: container.container_name,
@@ -752,6 +813,11 @@ function stopClicked(){
  containers.forEach(container => {
      const checkbox = document.getElementById(`checkbox-container-${container.container_name}`);
      if(checkbox.checked === true){
+        const label = checkbox.nextElementSibling;
+        if (label.style.color != 'red'){
+            const loader = document.getElementById(`loader-${container.container_name}`);
+            loader.hidden=false;
+        }
          tmp.push({
              docker_compose_path: dockerComposePath.file_path,
              container: container.container_name,
@@ -788,7 +854,12 @@ showToast("Stopping selected containers...");
 async function stopContainer( containerToStop) {
     try {
         showToast(`Stopping container: ${containerToStop.container_name}`);
-      
+        const checkbox = document.getElementById(`checkbox-container-${containerToStop.container_name}`);
+        const label = checkbox.nextElementSibling;
+        if (label.style.color != 'red'){
+            const loader = document.getElementById(`loader-${containerToStop.container_name}`);
+            loader.hidden=false;
+        }
 
             // Send a request to the backend to start the container
             const startResponse = await fetch('http://localhost:8000/stop-container', {
@@ -813,6 +884,12 @@ async function stopContainer( containerToStop) {
 async function startContainer( containerToStart) {
     try {
         showToast(`Starting container: ${containerToStart.container_name}`);
+        const checkbox = document.getElementById(`checkbox-container-${containerToStart.container_name}`);
+        const label = checkbox.nextElementSibling;
+        if (label.style.color != 'green'){
+            const loader = document.getElementById(`loader-${containerToStart.container_name}`);
+            loader.hidden=false;
+        }
 
             // Send a request to the backend to start the container
             const startResponse = await fetch('http://localhost:8000/start-container', {
@@ -869,7 +946,14 @@ function showToast(message, color = "blue") {
       duration: 3000,  // 3 seconds
       gravity: "bottom",  // or "bottom"
       position: "right",  // or "left", "right"
-      backgroundColor: color
+      //backgroundColor: color,
+      style: {
+        border: "None",
+        borderRadius: "10px",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",  // Add a subtle box shadow
+        opacity: 0.8,  // Adjust the opacity as needed
+        background: `radial-gradient(circle, ${color} 60%, rgba(0, 0, 0, 0) )`  // Add a gradient from the specified color to white
+    }
   }).showToast();
   
   }

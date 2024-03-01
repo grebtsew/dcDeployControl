@@ -85,7 +85,7 @@ async def start_container(data: StartContainer):
 
         if 'services' in compose_data and container_name in compose_data['services']:
             print(f"Starting container: {container_name}")
-            val = ['docker-compose', '-f', docker_compose_path, 'up', '-d']
+            val = ['docker-compose', '-f', docker_compose_path, 'up', '-d','--remove-orphans','--force-recreate']
             if(data.flags != ''):
                 val.append(data.flags)
 
@@ -109,7 +109,7 @@ async def start_containers(dataList: List[StartContainer]):
         docker_compose_path = dataList[0].docker_compose_path
 
         print(f"Starting containers: {containers}")
-        val =['docker-compose', '-f', docker_compose_path, 'up', '-d']
+        val =['docker-compose', '-f', docker_compose_path, 'up', '-d', '--remove-orphans','--force-recreate']
         if(data.flags != ''):
             val.append(dataList[0].flags)
         val.extend(containers)
@@ -192,6 +192,21 @@ async def stop_containers(dataList: List[StartContainer]):
         val =['docker-compose', '-f', docker_compose_path, 'stop']
         val.extend(containers)
        
+        subprocess.run(val)
+        return True
+       
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
+
+@app.post("/clear", response_model=bool)
+async def stop_containers(data: StartContainer):
+    try:
+       
+        docker_compose_path = data.docker_compose_path
+        print(f"Docker-compose down.")
+        val =['docker-compose', '-f', docker_compose_path, 'down']
+      
         subprocess.run(val)
         return True
        
