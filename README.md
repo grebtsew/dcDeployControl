@@ -36,7 +36,7 @@ labels:
 The main features include:
 
 - **Automatic detection and visualization of Networks** : Will parse docker-compose networks and automatically devide containers into appropriate groups.
-- **Automatic deteciton of external containers and Networks** : The visualization will each 10 second receive information about other contaners running in the docker environment and add them to the visualization.
+- **Automatic detection of external containers and Networks** : The visualization will each 10 second receive information about other contaners running in the docker environment and add them to the visualization.
 - **Start and stop any subsets of containers** : Creates a dynamic gui where containers can be easily started eighter one at a time or as a larger subset.
 - **Create clickable links** : Will add buttons on container cards to faster reach other applications.
 - **Label system** : Uses a label system, described above to let the user manipulate the visualization.
