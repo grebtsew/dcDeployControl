@@ -21,7 +21,7 @@ Checkout the demo gif below!
 
 # Manual labels in Docker-compose
 
-A lable system has been added that can help control the visualizations and other structure of the application. Below the added docker-compose labels that will be parsed on software execution are described.
+A label system has been added that can help control the visualizations and other structure of the application. Below the added docker-compose labels that will be parsed on software execution are described.
 
 ```yml
 labels:
