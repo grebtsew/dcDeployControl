@@ -1,6 +1,6 @@
 # Example docker-compose file with several connected links
 
-version: '3'
+version: "3"
 
 services:
   webapp1:
@@ -104,7 +104,7 @@ services:
 
   logging:
     labels:
-        - "group=monitoring"
+      - "group=monitoring"
     container_name: logging
     image: fluentd
     networks:

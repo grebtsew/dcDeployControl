@@ -1,7 +1,6 @@
 # dcDeployControl
- A gui control microservice for parsing and executing choosen parts of a docker-compose file.
 
-
+A gui control microservice for parsing and executing choosen parts of a docker-compose file.
 
 Skapa docker-compose deploy control
 
@@ -12,11 +11,10 @@ Skapa docker-compose deploy control
 5. live find running docker
 6. google material design
 
-
-
 # Testing
 
 To run tests, install pytest and run:
+
 ```
 pytest test_docker_functions.py
 ```

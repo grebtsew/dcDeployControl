@@ -1,117 +1,122 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>dcDeployControl</title>
     <script type="text/javascript" src="./lib/vis-network.min.js"></script>
-    <link rel="stylesheet" href="./utils/styles.css">
-    <link rel="stylesheet" type="text/css" href="./lib/toastify.css">
-    <link rel="stylesheet" href="./lib/all.min.css">
+    <link rel="stylesheet" href="./utils/styles.css" />
+    <link rel="stylesheet" type="text/css" href="./lib/toastify.css" />
+    <link rel="stylesheet" href="./lib/all.min.css" />
     <script type="text/javascript" src="./lib/toastify.js"></script>
-</head>
-<body>
-
+  </head>
+  <body>
     <header>
-       <div>dcDeployControl</div>
-        <div id="clock"></div>
+      <div>dcDeployControl</div>
+      <div id="clock"></div>
     </header>
 
     <main>
-       
+      <div id="control-panel">
+        <div id="content">
+          <h1>Tools</h1>
 
-        <div id="control-panel">
-           
-            <div id="content">
-               
-            <h1>Tools</h1>
+          <button class="smlbtn" onclick="reshuffleGraph()">
+            <i class="fa fa-random" style="color: white"> </i> Shuffle
+          </button>
+          <button class="smlbtn" onclick="buildClicked()">
+            <i class="fas fa-cogs"></i> Build All Containers
+          </button>
+          <button class="smlbtn" onclick="clearClicked()">
+            <i class="fas fa-times"></i> Clear
+          </button>
+          <div class="card-network">
+            <input id="build" type="checkbox" onclick="buildFlag()" />
+            <label for="build">Build on Run <i class="fas fa-cogs"></i> </label>
+          </div>
+          <div class="card-network">
+            <input
+              id="dark"
+              type="checkbox"
+              onclick="darkmode()"
+              checked="true"
+            />
+            <label for="dark"
+              >DarkMode <i class="dark-icon fas fa-moon"></i>
+            </label>
+          </div>
 
-          
-           
-            <button class="smlbtn" onclick="reshuffleGraph()" ><i class="fa fa-random"  style="color: white;"> </i> Shuffle </button>
-            <button class="smlbtn" onclick="buildClicked()" ><i class="fas fa-cogs"></i> Build All Containers </button>
-            <button class="smlbtn" onclick="clearClicked()" ><i class="fas fa-times"></i> Clear </button>
-            <div class="card-network">
-                <input id="build" type="checkbox" onclick="buildFlag()">
-                <label for="build">Build on Run <i class="fas fa-cogs"></i> </label>
-            </div>
-            <div class="card-network">
-                <input id="dark" type="checkbox" onclick="darkmode()" checked="true">
-                <label for="dark">DarkMode <i class="dark-icon fas fa-moon"></i> </label>
-            </div>
+          <h1>External</h1>
+          <div id="checkboxesDocker"></div>
 
-            <h1>External</h1>
-            <div id="checkboxesDocker"> </div>
-            
-            <h1>Networks</h1>
-            <div id ="legend-container"> </div>
+          <h1>Networks</h1>
+          <div id="legend-container"></div>
 
-            <h1>Containers</h1>
-            Select:
-            <button class="smlbtn" id="None" onclick="Select(None)" >None </button>
-            <button class="smlbtn" onclick="Select('all')" >All </button>
-            <button class="smlbtn" onclick="Select('default')" >Default </button>
-            
-            <div id="checkboxes"> </div>
-           
-            <button id="start-btn" onclick="startClicked()" ><i class="fa fa-play" style="color: green;"></i>  Run Selected</button>
-            <button id="stop-btn" onclick="stopClicked()"><i class="fa fa-stop"  style="color: red;"></i>  Stop Selected</button>
-           
-            </div>
-        
+          <h1>Containers</h1>
+          Select:
+          <button class="smlbtn" id="None" onclick="Select(None)">None</button>
+          <button class="smlbtn" onclick="Select('all')">All</button>
+          <button class="smlbtn" onclick="Select('default')">Default</button>
+
+          <div id="checkboxes"></div>
+
+          <button id="start-btn" onclick="startClicked()">
+            <i class="fa fa-play" style="color: green"></i> Run Selected
+          </button>
+          <button id="stop-btn" onclick="stopClicked()">
+            <i class="fa fa-stop" style="color: red"></i> Stop Selected
+          </button>
         </div>
-        <div id="drag-handle"></div>
-        <div id="graph-container">
-           
-            <!-- Add your interactive graph here -->
-        </div>
+      </div>
+      <div id="drag-handle"></div>
+      <div id="graph-container">
+        <!-- Add your interactive graph here -->
+      </div>
     </main>
 
     <script src="./utils/script.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-    const dragHandle = document.getElementById('drag-handle');
-    const controlPanel = document.getElementById('control-panel');
-    const graphcontainer = document.getElementById('graph-container');
-    
-    let isDragging = false;
-    let startX, startWidth, graphStartWidth;
+      document.addEventListener("DOMContentLoaded", function () {
+        const dragHandle = document.getElementById("drag-handle");
+        const controlPanel = document.getElementById("control-panel");
+        const graphcontainer = document.getElementById("graph-container");
 
-    dragHandle.addEventListener('mousedown', function (e) {
-        isDragging = true;
-        startX = e.clientX; // Use clientX instead of pageX
-        startWidth = controlPanel.offsetWidth;
-        graphStartWidth = graphcontainer.offsetWidth;
-    });
+        let isDragging = false;
+        let startX, startWidth, graphStartWidth;
 
-    document.addEventListener('mousemove', function (e) {
-        if (isDragging) {
+        dragHandle.addEventListener("mousedown", function (e) {
+          isDragging = true;
+          startX = e.clientX; // Use clientX instead of pageX
+          startWidth = controlPanel.offsetWidth;
+          graphStartWidth = graphcontainer.offsetWidth;
+        });
+
+        document.addEventListener("mousemove", function (e) {
+          if (isDragging) {
             const newWidth = startWidth + (e.clientX - startX);
             const newGraphWidth = graphStartWidth - (e.clientX - startX);
 
             controlPanel.style.width = `${newWidth}px`;
-            graphcontainer.style.width =  `${newGraphWidth}px`;
+            graphcontainer.style.width = `${newGraphWidth}px`;
             // Ensure the new graph width doesn't become negative
             if (newGraphWidth > 0) {
-                network.setSize('100%', `2000px`);
+              network.setSize("100%", `2000px`);
             }
-        }
-    });
-
-    document.addEventListener('mouseup', function () {
-        isDragging = false;
-    });
-});
-
-
-let  resizeTimer;
-window.addEventListener('resize', function() {
-    
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function() {
-        location.reload();
-    }, 500);
+          }
         });
+
+        document.addEventListener("mouseup", function () {
+          isDragging = false;
+        });
+      });
+
+      let resizeTimer;
+      window.addEventListener("resize", function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          location.reload();
+        }, 500);
+      });
     </script>
-</body>
+  </body>
 </html>
