@@ -17,6 +17,7 @@
     </header>
 
     <main>
+      <input type="file" id="fileInput" style="display: none" />
       <div id="control-panel">
         <div id="content">
           <h1>Tools</h1>
@@ -29,6 +30,15 @@
           </button>
           <button class="smlbtn" onclick="clearClicked()">
             <i class="fas fa-times"></i> Clear
+          </button>
+          <button class="smlbtn" onclick="triggerFileDialog()">
+            <div class="loader" id="loader-import" hidden="true"></div>
+            <i class="fas fa-arrow-circle-down" style="color: orange"></i>
+            Import
+          </button>
+          <button class="smlbtn" onclick="exportClicked()">
+            <div class="loader" id="loader-export" hidden="true"></div>
+            <i class="fas fa-arrow-circle-up" style="color: yellow"></i> Export
           </button>
           <div class="card-network">
             <input id="build" type="checkbox" onclick="buildFlag()" />

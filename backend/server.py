@@ -7,6 +7,8 @@ import yaml
 import subprocess
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+from datetime import datetime
+import asyncio
 
 app = FastAPI()
 
@@ -70,6 +72,34 @@ async def parse_docker_compose(data: DockerComposeInfo):
                 )
 
         return container_info_list
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
+
+@app.post("/export-images", response_model=bool)
+async def export_images(data: DockerComposeInfo):
+    try:
+        print(f"Exporting All Docker images to {data.file_path}")
+        command = ["docker", "save", "-o", data.file_path] + subprocess.check_output(
+            ["docker", "images", "-q"]
+        ).decode("utf-8").splitlines()
+        process = await asyncio.create_subprocess_exec(*command)
+        await process.wait()
+        print("Done exporting images.")
+        return True
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
+
+@app.post("/import-images", response_model=bool)
+async def import_images(data: DockerComposeInfo):
+    try:
+        print(f"Importing All Docker image from file {data.file_path}.")
+        command = ["docker", "load", "-i", data.file_path]
+        process = await asyncio.create_subprocess_exec(*command)
+        await process.wait()
+        print("Done importing images.")
+        return True
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 

@@ -41,6 +41,7 @@ The main features include:
 - **Create clickable links** : Will add buttons on container cards to faster reach other applications.
 - **Label system** : Uses a label system, described above to let the user manipulate the visualization.
 - **Build and Clear function** : Build and clear functions has been added that runs the `build` and `down` command to clear up any issues with old running containers.
+- **Import and Export functions**: Docker save and load all images in system can be called. Only the volume folder can be used for import and export.
 
 # CI/CD
 

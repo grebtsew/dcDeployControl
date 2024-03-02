@@ -360,7 +360,7 @@ async function parseDockerCompose(data) {
     }
 
     const result = await response.json();
-    //console.log('Parsed Docker Compose Data:', result);
+
     containers = result;
     updateNodes(result);
 
@@ -1196,7 +1196,7 @@ async function getRunningContainers() {
     );
 
     const result = await response.json();
-    // console.log(result);
+
     updateRunningNodes(result);
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
@@ -1257,4 +1257,105 @@ function Select(arg) {
     }
     checkbox.dispatchEvent(new Event("change"));
   });
+}
+
+function generateTarballName() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  const tarballName = `${year}${month}${day}_${hours}${minutes}${seconds}_docker_images.tar`;
+
+  return tarballName;
+}
+
+const fileInput = document.getElementById("fileInput");
+fileInput.addEventListener("change", importClicked);
+
+function triggerFileDialog() {
+  const fileInput = document.getElementById("fileInput");
+  fileInput.click();
+}
+
+function importClicked(event) {
+  const selectedFile = event.target.files[0];
+
+  showToast(`Importing images from file: ./${selectedFile.name}`);
+
+  const loader = document.getElementById("loader-import");
+  loader.hidden = false;
+
+  const data = {
+    file_path: `/docker/${selectedFile.name}`,
+  };
+
+  const responsePromise = fetch("http://localhost:8000/import-images", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  responsePromise
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((result) => {
+      showToast(`Images imported successfully!`, "green");
+      loader.hidden = true;
+      return result;
+    })
+    .catch((error) => {
+      showToast(`Images import failed!`, "red");
+      loader.hidden = true;
+      console.error("Error importing images:", error.message);
+    });
+}
+
+function exportClicked() {
+  var tarballname = generateTarballName();
+
+  showToast(`Exporting images to file: ./${tarballname}`);
+
+  const loader = document.getElementById("loader-export");
+  loader.hidden = false;
+
+  const data = {
+    file_path: `/docker/${tarballname}`,
+  };
+
+  const responsePromise = fetch("http://localhost:8000/export-images", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  responsePromise
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((result) => {
+      showToast(`Images exported successfully`, "green");
+      loader.hidden = true;
+      return result;
+    })
+    .catch((error) => {
+      showToast(`Images export failed!`, "red");
+      loader.hidden = true;
+      console.error("Error exporting images:", error.message);
+    });
 }
