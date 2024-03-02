@@ -1,5 +1,5 @@
-// JavaScript code for clock and other dynamic functionalities
 function updateClock() {
+  // Adds a clock in header
   const now = new Date();
   const hours = now.getHours().toString().padStart(2, "0");
   const minutes = now.getMinutes().toString().padStart(2, "0");
@@ -343,6 +343,7 @@ const iconClasses = [
 ];
 
 async function parseDockerCompose(data) {
+  // Send request to parse DockerCompose file
   try {
     const response = await fetch("http://localhost:8000/parse-docker-compose", {
       method: "POST",
@@ -377,7 +378,7 @@ async function parseDockerCompose(data) {
   }
 }
 
-// Example usage:
+// Set path to docker-compose, dont change it here!
 const dockerComposePath = {
   file_path: "/docker/docker-compose.yml",
 };
@@ -385,6 +386,7 @@ const dockerComposePath = {
 var darkmode_var = false;
 
 function darkmode() {
+  // Handle darkmode css change color
   darkmode_var = !darkmode_var;
   var graph = document.getElementById("graph-container");
   var header = document.getElementsByTagName("header")[0];
@@ -406,11 +408,13 @@ function darkmode() {
   }
 }
 
+// Trigger darkmode once as default
 darkmode();
 
+// List of networks to ignore
 var ignoreList = [];
 
-// Create a network
+// Create a network graph
 var container = document.getElementById("graph-container");
 var nodes = new vis.DataSet();
 var edges = new vis.DataSet();
@@ -419,6 +423,8 @@ var data = {
   edges: edges,
 };
 
+// Options for the graph behavior
+// These settings can be fun to play around with!
 var options = {
   width: "100%", // Set the width of the graph container
   height: "1500px", // Set the height of the graph container
@@ -461,12 +467,17 @@ var options = {
   /* Add more vis.js options here */
 };
 
+// Keeps track of network random colors.
 var networkColors = {};
+
+// Initate Network graph.
 var network = new vis.Network(container, data, options);
 
+// Perform parse on startup.
 let containers = parseDockerCompose(dockerComposePath);
 
 function addNodeToGraph(containerName) {
+  // Adds new nodes to graph.
   const nodeExists = nodes.get(containerName);
 
   // If the node doesn't exist, add it to the network
@@ -478,6 +489,7 @@ function addNodeToGraph(containerName) {
 }
 
 function getRandomIconClass() {
+  // Gets a random icon class name
   const randomIndex = Math.floor(Math.random() * iconClasses.length);
   return iconClasses[randomIndex];
 }
@@ -495,6 +507,10 @@ function getRandomColor() {
 }
 
 function findSmallestNetwork(containers) {
+  // Returns the smalles network a container is part of and uses it as container group.
+  // Part of detecting and generating groups from network.
+  // This is what happens if groupnames are not set as labels.
+
   // Create a map to store network occurrences
   const networkCount = new Map();
 
@@ -531,6 +547,9 @@ function findSmallestNetwork(containers) {
 }
 
 function updateNodes(containers) {
+  // Happens when nodes in docker-compose is updated!
+  // After parsing docker-compose
+
   const checkboxesContainer = document.getElementById("checkboxes");
 
   // Clear existing content in case of multiple calls
@@ -688,10 +707,14 @@ function updateNodes(containers) {
 }
 
 function openWebsite(url) {
+  // Open websites when button in clicked
   window.open(url, "_blank");
 }
 
 function updateRunningNodes(_containers) {
+  // Updates nodes when external docker containers are updated
+  // this is called every N seconds, if there are changes in running containers.
+
   const checkboxesContainer = document.getElementById("checkboxesDocker");
 
   // Clear existing content in case of multiple calls
@@ -808,6 +831,8 @@ function updateRunningNodes(_containers) {
 }
 
 function reshuffleGraph() {
+  // Reshuffle and randomize node positions in network graph.
+
   const nodeIdArray = nodes.getIds();
 
   // Shuffle the order of node IDs
@@ -825,7 +850,9 @@ function reshuffleGraph() {
     network.moveNode(id, newPosition.x, newPosition.y);
   });
 }
+
 function buildFlag() {
+  // Toggle build flag value
   const checkbox = document.getElementById("build");
   if (checkbox.checked) {
     flag = "--build";
@@ -833,7 +860,10 @@ function buildFlag() {
     flag = "";
   }
 }
+
 function addEdgesBasedOnNetworks(containerInfoList) {
+  // Adds edges or bows between nodes in the network, called from both updateNodes and updateRunningNodes
+
   // Iterate over containers to generate network colors
   containerInfoList.forEach((container) => {
     container.networks_used.forEach((network) => {
@@ -884,15 +914,15 @@ function addEdgesBasedOnNetworks(containerInfoList) {
   });
 }
 
-// Function to get a common network between two containers
 function getCommonNetworks(container1, container2) {
+  // Function to get a common network between two containers
   return container1.networks_used.filter((network) =>
     container2.networks_used.includes(network),
   );
 }
 
-// Function to generate a random color (for demonstration purposes)
 function getRandomColor() {
+  // Function to generate a random color (for demonstration purposes)
   const letters = "0123456789ABCDEF";
   let color = "#";
   for (let i = 0; i < 6; i++) {
@@ -901,8 +931,10 @@ function getRandomColor() {
   return color;
 }
 
-// Function to update the legend based on the network colors
 function updateLegend(networkColors) {
+  // Function to update the legend based on the network colors
+  // The legend is in reallity the network-cards that represent all networks.
+
   const legendContainer = document.getElementById("legend-container");
 
   // Clear existing content in case of multiple calls
@@ -940,6 +972,8 @@ function updateLegend(networkColors) {
 }
 
 function toggleContainerVisibility(containername) {
+  // On checkbox click change node visibility.
+
   const nodesArray = nodes.get(); // Get all nodes
 
   nodesArray.forEach((node) => {
@@ -957,6 +991,8 @@ function toggleContainerVisibility(containername) {
 }
 
 function toggleNetworkVisibility(network) {
+  // On network checkbox click change edge visibility.
+
   const edgesArray = edges.get(); // Get all edges
 
   edgesArray.forEach((edge) => {
@@ -970,7 +1006,7 @@ function toggleNetworkVisibility(network) {
 }
 
 function clearClicked() {
-  // start all
+  // Runs docker-compose down to remove network along with containers.
 
   try {
     showToast("Clearing docker-compose...");
@@ -1007,7 +1043,7 @@ function clearClicked() {
 }
 
 function buildClicked() {
-  // start all
+  // Runs docker-compose build, useful for larger systems.
 
   try {
     showToast("Started building all containers...");
@@ -1031,7 +1067,7 @@ function buildClicked() {
 }
 
 function startClicked() {
-  // start all
+  // start all containers with checked checkboxes.
 
   var tmp = [];
   containers.forEach((container) => {
@@ -1075,7 +1111,7 @@ function startClicked() {
 }
 
 function stopClicked() {
-  // stop clicked
+  // stop all containers with checked checkboxes
 
   var tmp = [];
   containers.forEach((container) => {
@@ -1119,6 +1155,7 @@ function stopClicked() {
 }
 
 async function stopContainer(containerToStop) {
+  // Stop a container.
   try {
     showToast(`Stopping container: ${containerToStop.container_name}`);
     const checkbox = document.getElementById(
@@ -1151,6 +1188,7 @@ async function stopContainer(containerToStop) {
 }
 
 async function startContainer(containerToStart) {
+  // start one container
   try {
     showToast(`Starting container: ${containerToStart.container_name}`);
     const checkbox = document.getElementById(
@@ -1183,6 +1221,8 @@ async function startContainer(containerToStart) {
 }
 
 async function getRunningContainers() {
+  // Gets all running containers every 10 second and send updates to updateRunningNodes.
+
   try {
     // Send a request to the backend to start the container
     const response = await fetch(
@@ -1203,11 +1243,13 @@ async function getRunningContainers() {
     throw error;
   }
 }
+
 setInterval(() => {
   getRunningContainers();
 }, 10000);
 
 function showToast(message, color = "blue") {
+  // Create toast notifications
   // Check if the browser supports the Notification API
   let toast = Toastify({
     text: message,
@@ -1226,6 +1268,8 @@ function showToast(message, color = "blue") {
 }
 
 function Select(arg) {
+  // Function that checks checkboxes when pressing None/All/Default buttons
+
   const checkboxes = document.querySelectorAll(
     'input[type="checkbox"][id^="checkbox-container-"]',
   );
@@ -1260,6 +1304,7 @@ function Select(arg) {
 }
 
 function generateTarballName() {
+  // Generate a export tarball name
   const now = new Date();
 
   const year = now.getFullYear();
@@ -1274,15 +1319,20 @@ function generateTarballName() {
   return tarballName;
 }
 
+// Add eventlisteners for fileinput import!
 const fileInput = document.getElementById("fileInput");
 fileInput.addEventListener("change", importClicked);
 
 function triggerFileDialog() {
+  // forward the filedialog result.
   const fileInput = document.getElementById("fileInput");
   fileInput.click();
 }
 
 function importClicked(event) {
+  // Handle import request
+  // And trigger docker load.
+
   const selectedFile = event.target.files[0];
 
   showToast(`Importing images from file: ./${selectedFile.name}`);
@@ -1322,6 +1372,9 @@ function importClicked(event) {
 }
 
 function exportClicked() {
+  // Handle export request
+  // And trigger docker save.
+
   var tarballname = generateTarballName();
 
   showToast(`Exporting images to file: ./${tarballname}`);

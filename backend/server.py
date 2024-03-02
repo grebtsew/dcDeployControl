@@ -49,6 +49,10 @@ class ContainerInfo(BaseModel):
 
 @app.post("/parse-docker-compose", response_model=List[ContainerInfo])
 async def parse_docker_compose(data: DockerComposeInfo):
+    """
+    Parse the docker-compose input file
+    Detect Container Name, Networks, Port-forwarding, Labels and return.
+    """
     try:
         file_path = data.file_path
         with open(file_path, "r") as file:
@@ -78,6 +82,9 @@ async def parse_docker_compose(data: DockerComposeInfo):
 
 @app.post("/export-images", response_model=bool)
 async def export_images(data: DockerComposeInfo):
+    """
+    Export all current images to a .tar file that then can be copied to other system.
+    """
     try:
         print(f"Exporting All Docker images to {data.file_path}")
         command = ["docker", "save", "-o", data.file_path] + subprocess.check_output(
@@ -93,6 +100,9 @@ async def export_images(data: DockerComposeInfo):
 
 @app.post("/import-images", response_model=bool)
 async def import_images(data: DockerComposeInfo):
+    """
+    Import all images from a .tar file.
+    """
     try:
         print(f"Importing All Docker image from file {data.file_path}.")
         command = ["docker", "load", "-i", data.file_path]
@@ -106,6 +116,11 @@ async def import_images(data: DockerComposeInfo):
 
 @app.post("/build-all", response_model=bool)
 async def build_all(data: StartContainer):
+    """
+    Build all containers in docker-compose.
+    This will minimize risk of pc crashing due to vast amount of containers to start at once.
+    Recommend running this atleast once first time.
+    """
     try:
         docker_compose_path = data.docker_compose_path
 
@@ -119,6 +134,9 @@ async def build_all(data: StartContainer):
 
 @app.post("/start-container", response_model=bool)
 async def start_container(data: StartContainer):
+    """
+    Start single docker container if it exists in compose.
+    """
     try:
         docker_compose_path = data.docker_compose_path
         container_to_start = data.container
@@ -155,6 +173,9 @@ async def start_container(data: StartContainer):
 
 @app.post("/start-containers", response_model=bool)
 async def start_containers(dataList: List[StartContainer]):
+    """
+    Start several containers if they exists in compose.
+    """
     try:
         containers = []
         for data in dataList:
@@ -185,6 +206,9 @@ async def start_containers(dataList: List[StartContainer]):
 
 @app.post("/is-container-running", response_model=bool)
 async def is_container_running(data: ContainerStatus):
+    """
+    Check if specific container is running.
+    """
     try:
         client = docker.from_env()
         container = client.containers.get(data.container_name)
@@ -197,6 +221,9 @@ async def is_container_running(data: ContainerStatus):
 
 @app.get("/get-running-containers-with-networks", response_model=List[ContainerInfo])
 async def get_running_containers_with_networks():
+    """
+    Get a list of all running containers and their network names.
+    """
     try:
         client = docker.from_env()
         all_containers = client.containers.list()
@@ -220,6 +247,9 @@ async def get_running_containers_with_networks():
 
 
 def get_container_networks(container):
+    """
+    Gets network of a container.
+    """
     try:
         container_info = docker.from_env().api.inspect_container(container.id)
         network_settings = container_info["NetworkSettings"]
@@ -232,6 +262,9 @@ def get_container_networks(container):
 
 @app.post("/stop-container", response_model=bool)
 async def stop_container(data: StartContainer):
+    """
+    Stop a single container.
+    """
     try:
         docker_compose_path = data.docker_compose_path
         container_to_stop = data.container
@@ -256,6 +289,9 @@ async def stop_container(data: StartContainer):
 
 @app.post("/stop-containers", response_model=bool)
 async def stop_containers(dataList: List[StartContainer]):
+    """
+    Stop several containers.
+    """
     try:
         containers = []
         for data in dataList:
@@ -276,6 +312,10 @@ async def stop_containers(dataList: List[StartContainer]):
 
 @app.post("/clear", response_model=bool)
 async def stop_containers(data: StartContainer):
+    """
+    Run docker-compose down on compose file.
+    Can later add more cache removeal here if needed.
+    """
     try:
 
         docker_compose_path = data.docker_compose_path
@@ -291,6 +331,9 @@ async def stop_containers(data: StartContainer):
 
 @app.get("/is-docker-running", response_model=bool)
 async def is_docker_running():
+    """
+    See if docker is running on device.
+    """
     try:
         client = docker.from_env()
         client.ping()  # This will raise an exception if Docker is not running

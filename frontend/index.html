@@ -33,12 +33,13 @@
           </button>
           <button class="smlbtn" onclick="triggerFileDialog()">
             <div class="loader" id="loader-import" hidden="true"></div>
-            <i class="fas fa-arrow-circle-down" style="color: orange"></i>
+            <i class="fas fa-arrow-circle-up" style="color: orange"></i>
             Import
           </button>
           <button class="smlbtn" onclick="exportClicked()">
             <div class="loader" id="loader-export" hidden="true"></div>
-            <i class="fas fa-arrow-circle-up" style="color: yellow"></i> Export
+            <i class="fas fa-arrow-circle-down" style="color: yellow"></i>
+            Export
           </button>
           <div class="card-network">
             <input id="build" type="checkbox" onclick="buildFlag()" />
@@ -73,19 +74,18 @@
           <button id="start-btn" onclick="startClicked()">
             <i class="fa fa-play" style="color: green"></i> Run Selected
           </button>
-          <button id="stop-btn" onclick="stopClicked()">
+          <button id="start-btn" onclick="stopClicked()">
             <i class="fa fa-stop" style="color: red"></i> Stop Selected
           </button>
         </div>
       </div>
       <div id="drag-handle"></div>
-      <div id="graph-container">
-        <!-- Add your interactive graph here -->
-      </div>
+      <div id="graph-container"></div>
     </main>
 
     <script src="./utils/script.js"></script>
     <script>
+      /* Handle interactive function here */
       document.addEventListener("DOMContentLoaded", function () {
         const dragHandle = document.getElementById("drag-handle");
         const controlPanel = document.getElementById("control-panel");
