@@ -215,4 +215,6 @@ async def stop_containers(data: StartContainer):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    from fastapi import WSGIApp
+    
+    uvicorn.run(WSGIApp(app), host="0.0.0.0", port=8000)
