@@ -11,5 +11,5 @@ services:
       - "80:80"
       - "8000:8000"
     volumes:
-      - ./example:/docker
+      - ./${PROJECT_PATH}:/docker
       - /var/run/docker.sock:/var/run/docker.sock
