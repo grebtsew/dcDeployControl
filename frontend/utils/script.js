@@ -1,15 +1,8 @@
-function updateClock() {
-  // Adds a clock in header
-  const now = new Date();
-  const hours = now.getHours().toString().padStart(2, "0");
-  const minutes = now.getMinutes().toString().padStart(2, "0");
-  const seconds = now.getSeconds().toString().padStart(2, "0");
-  document.getElementById("clock").innerText = `${hours}:${minutes}:${seconds}`;
-}
-
-setInterval(updateClock, 1000);
-
-var flag = "";
+/**
+ *
+ * Init code
+ *
+ */
 
 const iconClasses = [
   "fa fa-flag",
@@ -342,71 +335,18 @@ const iconClasses = [
   "fa fa-maxcdn",
 ];
 
-async function parseDockerCompose(data) {
-  // Send request to parse DockerCompose file
-  try {
-    const response = await fetch("http://localhost:8000/parse-docker-compose", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        `HTTP error! Status: ${response.status}, Detail: ${errorData.detail}`,
-      );
-    }
-
-    const result = await response.json();
-
-    containers = result;
-    updateNodes(result);
-
-    // Update the legend based on the network colors
-    updateLegend(networkColors);
-
-    showToast("Welcome!");
-    showToast("Docker-compose Parsed Successfully!", "green");
-
-    return result;
-  } catch (error) {
-    console.error("An error occurred:", error.message);
-    throw error;
-  }
-}
-
-// Set path to docker-compose, dont change it here!
+// Sets path to docker-compose, dont change it here!
 const dockerComposePath = {
   file_path: "/docker/docker-compose.yml",
 };
 
-var darkmode_var = false;
+// Add eventlisteners for fileinput import!
+const fileInput = document.getElementById("fileInput");
+fileInput.addEventListener("change", importClicked);
 
-function darkmode() {
-  // Handle darkmode css change color
-  darkmode_var = !darkmode_var;
-  var graph = document.getElementById("graph-container");
-  var header = document.getElementsByTagName("header")[0];
-  var body = document.getElementsByTagName("body")[0];
-  var control = document.getElementById("control-panel");
-  var drag = document.getElementById("drag-handle");
-  if (darkmode_var) {
-    body.style.backgroundColor = "#515151";
-    graph.style.backgroundColor = "#515151";
-    header.style.backgroundColor = "#011b2d";
-    control.style.backgroundColor = "rgb(63, 63, 66)";
-    drag.style.backgroundColor = "#333";
-  } else {
-    graph.style.backgroundColor = "#f0f0f0";
-    body.style.backgroundColor = "#f0f0f0";
-    header.style.backgroundColor = "#333";
-    control.style.backgroundColor = "rgb(181, 177, 177)";
-    drag.style.backgroundColor = "#ddd";
-  }
-}
+var flag = "";
+
+var darkmode_var = false;
 
 // Trigger darkmode once as default
 darkmode();
@@ -473,8 +413,72 @@ var networkColors = {};
 // Initate Network graph.
 var network = new vis.Network(container, data, options);
 
+// global reference to all containers
+var containers = [];
+
 // Perform parse on startup.
-let containers = parseDockerCompose(dockerComposePath);
+parseDockerCompose(dockerComposePath);
+
+// Activate clock
+setInterval(updateClock, 1000);
+
+// Activate background get running docker containers loop
+setInterval(() => {
+  getRunningContainers();
+}, 10000);
+
+/**
+ *
+ * Functions
+ *
+ */
+
+function genFetch(data, path, method = "POST", toast = false) {
+  /**
+   * A generic fetch function, that waits for response before continueing!
+   */
+  if (toast) {
+    showToast(`Starting task ${path}...`);
+  }
+
+  var responsePromise;
+  switch (method) {
+    case "POST":
+      responsePromise = fetch(`http://localhost:8000/${path}`, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      break;
+    case "GET":
+      responsePromise = fetch(`http://localhost:8000/${path}`, {
+        method: method,
+      });
+      break;
+  }
+
+  return responsePromise
+    .then((response) => {
+      if (!response.ok) {
+        showToast(`Backend failed with task: ${path}`, "red");
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((result) => {
+      if (toast) {
+        showToast(`${path} task completed successfully!`, "green");
+      }
+
+      return result;
+    })
+    .catch((error) => {
+      showToast(`${path} task failed!`, "red");
+      console.error("Error exporting images:", error.message);
+    });
+}
 
 function addNodeToGraph(containerName) {
   // Adds new nodes to graph.
@@ -488,22 +492,51 @@ function addNodeToGraph(containerName) {
   }
 }
 
-function getRandomIconClass() {
-  // Gets a random icon class name
-  const randomIndex = Math.floor(Math.random() * iconClasses.length);
-  return iconClasses[randomIndex];
+function updateClock() {
+  // Adds a clock in header
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, "0");
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  const seconds = now.getSeconds().toString().padStart(2, "0");
+  document.getElementById("clock").innerText = `${hours}:${minutes}:${seconds}`;
 }
 
-function getRandomColor() {
-  // Generate random values for red, green, and blue components
-  const red = Math.floor(Math.random() * 200);
-  const green = Math.floor(Math.random() * 200);
-  const blue = Math.floor(Math.random() * 200);
+function parseDockerCompose(data) {
+  // Send request to parse DockerCompose file
+  genFetch(data, "parse-docker-compose").then((result) => {
+    // Handle the result here
+    containers = result;
 
-  // Combine the components to form a CSS color string
-  const color = `rgb(${red},${green},${blue})`;
+    updateNodes(result);
 
-  return color;
+    // Update the legend based on the network colors
+    updateLegend(networkColors);
+
+    showToast("Welcome!");
+  });
+}
+
+function darkmode() {
+  // Handle darkmode css change color
+  darkmode_var = !darkmode_var;
+  var graph = document.getElementById("graph-container");
+  var header = document.getElementsByTagName("header")[0];
+  var body = document.getElementsByTagName("body")[0];
+  var control = document.getElementById("control-panel");
+  var drag = document.getElementById("drag-handle");
+  if (darkmode_var) {
+    body.style.backgroundColor = "#515151";
+    graph.style.backgroundColor = "#515151";
+    header.style.backgroundColor = "#011b2d";
+    control.style.backgroundColor = "rgb(63, 63, 66)";
+    drag.style.backgroundColor = "#333";
+  } else {
+    graph.style.backgroundColor = "#f0f0f0";
+    body.style.backgroundColor = "#f0f0f0";
+    header.style.backgroundColor = "#333";
+    control.style.backgroundColor = "rgb(181, 177, 177)";
+    drag.style.backgroundColor = "#ddd";
+  }
 }
 
 function findSmallestNetwork(containers) {
@@ -1007,246 +1040,163 @@ function toggleNetworkVisibility(network) {
 
 function clearClicked() {
   // Runs docker-compose down to remove network along with containers.
+  showToast("Clearing docker-compose...");
 
-  try {
-    showToast("Clearing docker-compose...");
+  showCardLoader("red");
 
-    containers.forEach((container) => {
+  const data = {
+    docker_compose_path: dockerComposePath.file_path,
+    container: "",
+    flags: flag,
+  };
+
+  showLoader("clear");
+  genFetch(data, "clear").then(() => {
+    hideLoader("clear");
+    showToast("Clearing all containers and networks complete!");
+  });
+}
+
+function showLoader(name) {
+  const loader = document.getElementById(`loader-${name}`);
+  loader.hidden = false;
+}
+function hideLoader(name) {
+  const loader = document.getElementById(`loader-${name}`);
+  loader.hidden = true;
+}
+
+function showCardLoader(color, name = "all", containerlist = containers) {
+  // Set load stop status on selected checkboxes
+
+  containerlist.forEach((container) => {
+    if (name === "all" || name === container.container_name) {
       const checkboxLabel = document.getElementById(
         `checkbox-container-${container.container_name}`,
       );
       const label = checkboxLabel.nextElementSibling;
-      if (label.style.color != "red") {
+      if (label.style.color != color) {
         const loader = document.getElementById(
           `loader-${container.container_name}`,
         );
         loader.hidden = false;
       }
-    });
-
-    // Send a request to the backend to start the container
-    const startResponse = fetch("http://localhost:8000/clear", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        docker_compose_path: dockerComposePath.file_path,
-        container: "",
-        flags: flag,
-      }),
-    });
-  } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
-    throw error;
-  }
+    }
+  });
 }
 
 function buildClicked() {
   // Runs docker-compose build, useful for larger systems.
 
-  try {
-    showToast("Started building all containers...");
+  showToast("Started building all containers...");
 
-    // Send a request to the backend to start the container
-    const startResponse = fetch("http://localhost:8000/build-all", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+  const data = {
+    docker_compose_path: dockerComposePath.file_path,
+    container: "",
+    flags: flag,
+  };
+
+  showLoader("build");
+  genFetch(data, "build-all").then(() => {
+    hideLoader("build");
+    showToast("Building all containers complete!");
+  });
+}
+
+function getContainersWithCheckedBoxes(color) {
+  var tmp = [];
+  containers.forEach((container) => {
+    const checkbox = document.getElementById(
+      `checkbox-container-${container.container_name}`,
+    );
+
+    if (checkbox.checked === true) {
+      const label = checkbox.nextElementSibling;
+      if (label.style.color != color) {
+        const loader = document.getElementById(
+          `loader-${container.container_name}`,
+        );
+        loader.hidden = false;
+      }
+      tmp.push({
         docker_compose_path: dockerComposePath.file_path,
-        container: "",
+        container: container.container_name,
         flags: flag,
-      }),
-    });
-  } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
-    throw error;
-  }
+      });
+    }
+  });
+  return tmp;
 }
 
 function startClicked() {
   // start all containers with checked checkboxes.
 
-  var tmp = [];
-  containers.forEach((container) => {
-    const checkbox = document.getElementById(
-      `checkbox-container-${container.container_name}`,
-    );
-
-    if (checkbox.checked === true) {
-      const label = checkbox.nextElementSibling;
-      if (label.style.color != "green") {
-        const loader = document.getElementById(
-          `loader-${container.container_name}`,
-        );
-        loader.hidden = false;
-      }
-      tmp.push({
-        docker_compose_path: dockerComposePath.file_path,
-        container: container.container_name,
-        flags: flag,
-      });
-    }
-  });
+  const tmp = getContainersWithCheckedBoxes("green");
 
   if (tmp.length == 0) {
     return;
   }
+
   showToast("Starting selected containers...");
-  try {
-    // Send a request to the backend to start the container
-    const startResponse = fetch("http://localhost:8000/start-containers", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(tmp),
-    });
-  } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
-    throw error;
-  }
+
+  showLoader("start");
+  genFetch(tmp, "start-containers").then(() => {
+    hideLoader("start");
+  });
 }
 
 function stopClicked() {
   // stop all containers with checked checkboxes
 
-  var tmp = [];
-  containers.forEach((container) => {
-    const checkbox = document.getElementById(
-      `checkbox-container-${container.container_name}`,
-    );
-    if (checkbox.checked === true) {
-      const label = checkbox.nextElementSibling;
-      if (label.style.color != "red") {
-        const loader = document.getElementById(
-          `loader-${container.container_name}`,
-        );
-        loader.hidden = false;
-      }
-      tmp.push({
-        docker_compose_path: dockerComposePath.file_path,
-        container: container.container_name,
-        flags: flag,
-      });
-    }
-  });
+  const tmp = getContainersWithCheckedBoxes("red");
 
   if (tmp.length == 0) {
     return;
   }
+
   showToast("Stopping selected containers...");
 
-  try {
-    // Send a request to the backend to start the container
-    const startResponse = fetch("http://localhost:8000/stop-containers", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(tmp),
-    });
-  } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
-    throw error;
-  }
+  showLoader("stop");
+  genFetch(tmp, "stop-containers").then(() => {
+    hideLoader("stop");
+  });
 }
 
 async function stopContainer(containerToStop) {
   // Stop a container.
-  try {
-    showToast(`Stopping container: ${containerToStop.container_name}`);
-    const checkbox = document.getElementById(
-      `checkbox-container-${containerToStop.container_name}`,
-    );
-    const label = checkbox.nextElementSibling;
-    if (label.style.color != "red") {
-      const loader = document.getElementById(
-        `loader-${containerToStop.container_name}`,
-      );
-      loader.hidden = false;
-    }
+  showToast(`Stopping container: ${containerToStop.container_name}`);
+  showCardLoader("red", containerToStop.container_name);
+  data = {
+    docker_compose_path: dockerComposePath.file_path,
+    container: containerToStop.container_name,
+    flags: flag,
+  };
 
-    // Send a request to the backend to start the container
-    const startResponse = await fetch("http://localhost:8000/stop-container", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        docker_compose_path: dockerComposePath.file_path,
-        container: containerToStop.container_name,
-        flags: flag,
-      }),
-    });
-  } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
-    throw error;
-  }
+  genFetch(data, "stop-container");
 }
 
 async function startContainer(containerToStart) {
   // start one container
-  try {
-    showToast(`Starting container: ${containerToStart.container_name}`);
-    const checkbox = document.getElementById(
-      `checkbox-container-${containerToStart.container_name}`,
-    );
-    const label = checkbox.nextElementSibling;
-    if (label.style.color != "green") {
-      const loader = document.getElementById(
-        `loader-${containerToStart.container_name}`,
-      );
-      loader.hidden = false;
-    }
+  showToast(`Starting container: ${containerToStart.container_name}`);
 
-    // Send a request to the backend to start the container
-    const startResponse = await fetch("http://localhost:8000/start-container", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        docker_compose_path: dockerComposePath.file_path,
-        container: containerToStart.container_name,
-        flags: flag,
-      }),
-    });
-  } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
-    throw error;
-  }
+  showCardLoader("green", containerToStart.container_name);
+  data = {
+    docker_compose_path: dockerComposePath.file_path,
+    container: containerToStart.container_name,
+    flags: flag,
+  };
+
+  genFetch(data, "start-container");
 }
 
 async function getRunningContainers() {
   // Gets all running containers every 10 second and send updates to updateRunningNodes.
-
-  try {
-    // Send a request to the backend to start the container
-    const response = await fetch(
-      "http://localhost:8000/get-running-containers-with-networks",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    const result = await response.json();
-
-    updateRunningNodes(result);
-  } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
-    throw error;
-  }
+  genFetch(NaN, "get-running-containers-with-networks", "GET").then(
+    (result) => {
+      updateRunningNodes(result);
+    },
+  );
 }
-
-setInterval(() => {
-  getRunningContainers();
-}, 10000);
 
 function showToast(message, color = "blue") {
   // Create toast notifications
@@ -1319,10 +1269,6 @@ function generateTarballName() {
   return tarballName;
 }
 
-// Add eventlisteners for fileinput import!
-const fileInput = document.getElementById("fileInput");
-fileInput.addEventListener("change", importClicked);
-
 function triggerFileDialog() {
   // forward the filedialog result.
   const fileInput = document.getElementById("fileInput");
@@ -1335,40 +1281,15 @@ function importClicked(event) {
 
   const selectedFile = event.target.files[0];
 
-  showToast(`Importing images from file: ./${selectedFile.name}`);
-
-  const loader = document.getElementById("loader-import");
-  loader.hidden = false;
+  showLoader("import");
 
   const data = {
     file_path: `/docker/${selectedFile.name}`,
   };
 
-  const responsePromise = fetch("http://localhost:8000/import-images", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+  genFetch(data, "import-images", "POST", true).then(() => {
+    hideLoader("import");
   });
-
-  responsePromise
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((result) => {
-      showToast(`Images imported successfully!`, "green");
-      loader.hidden = true;
-      return result;
-    })
-    .catch((error) => {
-      showToast(`Images import failed!`, "red");
-      loader.hidden = true;
-      console.error("Error importing images:", error.message);
-    });
 }
 
 function exportClicked() {
@@ -1377,38 +1298,13 @@ function exportClicked() {
 
   var tarballname = generateTarballName();
 
-  showToast(`Exporting images to file: ./${tarballname}`);
-
-  const loader = document.getElementById("loader-export");
-  loader.hidden = false;
+  showLoader("export");
 
   const data = {
     file_path: `/docker/${tarballname}`,
   };
 
-  const responsePromise = fetch("http://localhost:8000/export-images", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+  genFetch(data, "export-images", "POST", true).then(() => {
+    hideLoader("export");
   });
-
-  responsePromise
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((result) => {
-      showToast(`Images exported successfully`, "green");
-      loader.hidden = true;
-      return result;
-    })
-    .catch((error) => {
-      showToast(`Images export failed!`, "red");
-      loader.hidden = true;
-      console.error("Error exporting images:", error.message);
-    });
 }

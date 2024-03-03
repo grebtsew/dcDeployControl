@@ -9,6 +9,38 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from datetime import datetime
 import asyncio
+import logging
+
+# Configure the logger
+logger = logging.getLogger("dcdc_logger")
+logger.setLevel(logging.DEBUG)
+
+
+# Function to generate the log file name based on the current hour
+def generate_log_file_name():
+    current_hour = datetime.now().strftime("%Y%m%d%H")
+    return f"./dcdc_{current_hour}.log"
+
+
+# Create a file handler and set the logging level to DEBUG
+file_handler = logging.FileHandler(generate_log_file_name())
+file_handler.setLevel(logging.DEBUG)
+
+# Create a console handler and set the logging level to INFO
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+
+# Create a formatter and add it to the handlers
+formatter = logging.Formatter(
+    "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+)
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add the handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
 
 app = FastAPI()
 
@@ -75,14 +107,15 @@ async def parse_docker_compose(data: DockerComposeInfo):
 
         return container_info_list
     except Exception as e:
+        logger.error(f"Parse Docker Compose => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
+
 async def awaitTask(command):
-    print(f"Running task {command}")
+    logger.info(f"Running task {command}")
     process = await asyncio.create_subprocess_exec(*command)
     await process.wait()
-    print(f"Task completed successfully.")
-
+    logger.info(f"Task {command} completed successfully.")
 
 
 @app.post("/export-images", response_model=bool)
@@ -94,9 +127,10 @@ async def export_images(data: DockerComposeInfo):
         command = ["docker", "save", "-o", data.file_path] + subprocess.check_output(
             ["docker", "images", "-q"]
         ).decode("utf-8").splitlines()
-        awaitTask(command)
+        await awaitTask(command)
         return True
     except Exception as e:
+        logger.error(f"Export Images => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -107,9 +141,10 @@ async def import_images(data: DockerComposeInfo):
     """
     try:
         command = ["docker", "load", "-i", data.file_path]
-        awaitTask(command)
+        await awaitTask(command)
         return True
     except Exception as e:
+        logger.error(f"Import Images => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -122,10 +157,11 @@ async def build_all(data: StartContainer):
     """
     try:
         command = ["docker-compose", "-f", data.docker_compose_path, "build"]
-        awaitTask(command)
+        await awaitTask(command)
         return True
 
     except Exception as e:
+        logger.error(f"Build all => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -134,6 +170,7 @@ def read_compose_file(path):
     with open(path, "r") as file:
         compose_data = yaml.safe_load(file)
     return compose_data
+
 
 @app.post("/start-container", response_model=bool)
 async def start_container(data: StartContainer):
@@ -145,7 +182,7 @@ async def start_container(data: StartContainer):
         container_name = data.container
 
         if "services" in compose_data and container_name in compose_data["services"]:
-           
+
             val = [
                 "docker-compose",
                 "-f",
@@ -159,13 +196,16 @@ async def start_container(data: StartContainer):
                 val.append(data.flags)
 
             val.append(container_name)
-            awaitTask(val)
+            await awaitTask(val)
 
             return True
         else:
-            print(f"Container '{container_name}' not found in the Docker Compose file.")
+            logger.warn(
+                f"Container '{container_name}' not found in the Docker Compose file."
+            )
             return False
     except Exception as e:
+        logger.error(f"Start container => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -174,6 +214,7 @@ def build_string_of_containerlist(dataList):
     for data in dataList:
         containers.append(data.container)
     return containers
+
 
 @app.post("/start-containers", response_model=bool)
 async def start_containers(dataList: List[StartContainer]):
@@ -196,10 +237,11 @@ async def start_containers(dataList: List[StartContainer]):
             val.append(dataList[0].flags)
         val.extend(containers)
 
-        awaitTask(val)
+        await awaitTask(val)
         return True
 
     except Exception as e:
+        logger.error(f"Start containers => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -213,8 +255,10 @@ async def is_container_running(data: ContainerStatus):
         container = client.containers.get(data.container_name)
         return container.status == "running"
     except docker.errors.NotFound:
+        logger.error(f"Is container running => Docker not running!")
         return False
     except Exception as e:
+        logger.error(f"Is container running => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -240,8 +284,11 @@ async def get_running_containers_with_networks():
                     )
                 )
 
+        logger.info(f"Handled reoccurent task get-running-containers-with-networks")
+
         return running_containers
     except Exception as e:
+        logger.error(f"get-running-containers-with-networks => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -255,7 +302,7 @@ def get_container_networks(container):
         networks = network_settings.get("Networks", {})
         return list(networks.keys())
     except Exception as e:
-        print(f"Error getting networks for container {container.name}: {e}")
+        logger.error(f"Error getting networks for container {container.name}: {e}")
         return []
 
 
@@ -269,13 +316,22 @@ async def stop_container(data: StartContainer):
         container_name = data.container
 
         if "services" in compose_data and container_name in compose_data["services"]:
-            command = ["docker-compose", "-f", data.docker_compose_path, "stop", container_name]
-            awaitTask(command)
+            command = [
+                "docker-compose",
+                "-f",
+                data.docker_compose_path,
+                "stop",
+                container_name,
+            ]
+            await awaitTask(command)
             return True
         else:
-            print(f"Container '{container_name}' not found in the Docker Compose file.")
+            logger.warn(
+                f"Container '{container_name}' not found in the Docker Compose file."
+            )
             return False
     except Exception as e:
+        logger.error(f"stop-container => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -289,9 +345,10 @@ async def stop_containers(dataList: List[StartContainer]):
         docker_compose_path = dataList[0].docker_compose_path
         val = ["docker-compose", "-f", docker_compose_path, "stop"]
         val.extend(containers)
-        awaitTask(val)
+        await awaitTask(val)
         return True
     except Exception as e:
+        logger.error(f"stop-containers => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -304,9 +361,10 @@ async def stop_containers(data: StartContainer):
     try:
         docker_compose_path = data.docker_compose_path
         val = ["docker-compose", "-f", docker_compose_path, "down"]
-        awaitTask(val)
+        await awaitTask(val)
         return True
     except Exception as e:
+        logger.error(f"clear => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -324,5 +382,5 @@ async def is_docker_running():
 
 
 if __name__ == "__main__":
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
+    logger.info("FastAPI DCDC backend server started!")

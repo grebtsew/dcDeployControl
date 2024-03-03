@@ -26,9 +26,11 @@
             <i class="fa fa-random" style="color: white"> </i> Shuffle
           </button>
           <button class="smlbtn" onclick="buildClicked()">
+            <div class="loader" id="loader-build" hidden="true"></div>
             <i class="fas fa-cogs"></i> Build All Containers
           </button>
           <button class="smlbtn" onclick="clearClicked()">
+            <div class="loader" id="loader-clear" hidden="true"></div>
             <i class="fas fa-times"></i> Clear
           </button>
           <button class="smlbtn" onclick="triggerFileDialog()">
@@ -72,9 +74,11 @@
           <div id="checkboxes"></div>
 
           <button id="start-btn" onclick="startClicked()">
+            <div class="loader" id="loader-start" hidden="true"></div>
             <i class="fa fa-play" style="color: green"></i> Run Selected
           </button>
           <button id="start-btn" onclick="stopClicked()">
+            <div class="loader" id="loader-stop" hidden="true"></div>
             <i class="fa fa-stop" style="color: red"></i> Stop Selected
           </button>
         </div>
