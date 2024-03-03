@@ -25,3 +25,6 @@ lib64/
 # vscode
 .vscode/
 .pytest_cache
+
+.log
+**/*.log
