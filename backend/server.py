@@ -54,9 +54,7 @@ async def parse_docker_compose(data: DockerComposeInfo):
     Detect Container Name, Networks, Port-forwarding, Labels and return.
     """
     try:
-        file_path = data.file_path
-        with open(file_path, "r") as file:
-            compose_data = yaml.safe_load(file)
+        compose_data = read_compose_file(data.file_path)
 
         container_info_list = []
 
@@ -79,6 +77,13 @@ async def parse_docker_compose(data: DockerComposeInfo):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
+async def awaitTask(command):
+    print(f"Running task {command}")
+    process = await asyncio.create_subprocess_exec(*command)
+    await process.wait()
+    print(f"Task completed successfully.")
+
+
 
 @app.post("/export-images", response_model=bool)
 async def export_images(data: DockerComposeInfo):
@@ -86,13 +91,10 @@ async def export_images(data: DockerComposeInfo):
     Export all current images to a .tar file that then can be copied to other system.
     """
     try:
-        print(f"Exporting All Docker images to {data.file_path}")
         command = ["docker", "save", "-o", data.file_path] + subprocess.check_output(
             ["docker", "images", "-q"]
         ).decode("utf-8").splitlines()
-        process = await asyncio.create_subprocess_exec(*command)
-        await process.wait()
-        print("Done exporting images.")
+        awaitTask(command)
         return True
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
@@ -104,11 +106,8 @@ async def import_images(data: DockerComposeInfo):
     Import all images from a .tar file.
     """
     try:
-        print(f"Importing All Docker image from file {data.file_path}.")
         command = ["docker", "load", "-i", data.file_path]
-        process = await asyncio.create_subprocess_exec(*command)
-        await process.wait()
-        print("Done importing images.")
+        awaitTask(command)
         return True
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
@@ -122,15 +121,19 @@ async def build_all(data: StartContainer):
     Recommend running this atleast once first time.
     """
     try:
-        docker_compose_path = data.docker_compose_path
-
-        print(f"Running build all.")
-        subprocess.run(["docker-compose", "-f", docker_compose_path, "build"])
+        command = ["docker-compose", "-f", data.docker_compose_path, "build"]
+        awaitTask(command)
         return True
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
+
+def read_compose_file(path):
+    compose_data = None
+    with open(path, "r") as file:
+        compose_data = yaml.safe_load(file)
+    return compose_data
 
 @app.post("/start-container", response_model=bool)
 async def start_container(data: StartContainer):
@@ -138,20 +141,15 @@ async def start_container(data: StartContainer):
     Start single docker container if it exists in compose.
     """
     try:
-        docker_compose_path = data.docker_compose_path
-        container_to_start = data.container
-
-        with open(docker_compose_path, "r") as file:
-            compose_data = yaml.safe_load(file)
-
-        container_name = container_to_start
+        compose_data = read_compose_file(data.docker_compose_path)
+        container_name = data.container
 
         if "services" in compose_data and container_name in compose_data["services"]:
-            print(f"Starting container: {container_name}")
+           
             val = [
                 "docker-compose",
                 "-f",
-                docker_compose_path,
+                data.docker_compose_path,
                 "up",
                 "-d",
                 "--remove-orphans",
@@ -161,8 +159,8 @@ async def start_container(data: StartContainer):
                 val.append(data.flags)
 
             val.append(container_name)
+            awaitTask(val)
 
-            subprocess.run(val)
             return True
         else:
             print(f"Container '{container_name}' not found in the Docker Compose file.")
@@ -171,33 +169,34 @@ async def start_container(data: StartContainer):
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
+def build_string_of_containerlist(dataList):
+    containers = []
+    for data in dataList:
+        containers.append(data.container)
+    return containers
+
 @app.post("/start-containers", response_model=bool)
 async def start_containers(dataList: List[StartContainer]):
     """
     Start several containers if they exists in compose.
     """
     try:
-        containers = []
-        for data in dataList:
-            containers.append(data.container)
+        containers = build_string_of_containerlist(dataList)
 
-        docker_compose_path = dataList[0].docker_compose_path
-
-        print(f"Starting containers: {containers}")
         val = [
             "docker-compose",
             "-f",
-            docker_compose_path,
+            dataList[0].docker_compose_path,
             "up",
             "-d",
             "--remove-orphans",
             "--force-recreate",
         ]
-        if data.flags != "":
+        if dataList[0].flags != "":
             val.append(dataList[0].flags)
         val.extend(containers)
 
-        subprocess.run(val)
+        awaitTask(val)
         return True
 
     except Exception as e:
@@ -266,19 +265,12 @@ async def stop_container(data: StartContainer):
     Stop a single container.
     """
     try:
-        docker_compose_path = data.docker_compose_path
-        container_to_stop = data.container
-
-        with open(docker_compose_path, "r") as file:
-            compose_data = yaml.safe_load(file)
-
-        container_name = container_to_stop
+        compose_data = read_compose_file(data.docker_compose_path)
+        container_name = data.container
 
         if "services" in compose_data and container_name in compose_data["services"]:
-            print(f"Stopping container: {container_name}")
-            subprocess.run(
-                ["docker-compose", "-f", docker_compose_path, "stop", container_name]
-            )
+            command = ["docker-compose", "-f", data.docker_compose_path, "stop", container_name]
+            awaitTask(command)
             return True
         else:
             print(f"Container '{container_name}' not found in the Docker Compose file.")
@@ -293,19 +285,12 @@ async def stop_containers(dataList: List[StartContainer]):
     Stop several containers.
     """
     try:
-        containers = []
-        for data in dataList:
-            containers.append(data.container)
-
+        containers = build_string_of_containerlist(dataList)
         docker_compose_path = dataList[0].docker_compose_path
-
-        print(f"Stopping containers: {containers}")
         val = ["docker-compose", "-f", docker_compose_path, "stop"]
         val.extend(containers)
-
-        subprocess.run(val)
+        awaitTask(val)
         return True
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
@@ -317,14 +302,10 @@ async def stop_containers(data: StartContainer):
     Can later add more cache removeal here if needed.
     """
     try:
-
         docker_compose_path = data.docker_compose_path
-        print(f"Docker-compose down.")
         val = ["docker-compose", "-f", docker_compose_path, "down"]
-
-        subprocess.run(val)
+        awaitTask(val)
         return True
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
