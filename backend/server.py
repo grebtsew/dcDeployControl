@@ -95,6 +95,15 @@ async def parse_docker_compose(data: DockerComposeInfo):
                 container_name = service_name
                 networks_used = service_config.get("networks", [])
                 labels_used = service_config.get("labels", [])
+
+                # Add manuel networks
+                for label in labels_used:
+                    tmp = label.split("=")
+                    if len(tmp) == 2:
+                        [key, name] = tmp
+                        if key == "network":
+                            networks_used.append(name)
+
                 exposed_ports = service_config.get("ports", [])
                 container_info_list.append(
                     ContainerInfo(

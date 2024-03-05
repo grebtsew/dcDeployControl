@@ -105,14 +105,12 @@ services:
   logging:
     labels:
       - "group=monitoring"
+      - "network=all"
+      - "network=backend"
+      - "network=logging"
     container_name: logging
     image: fluentd
-    networks:
-      - backend
-      - logging
-      - monitoring
-      - cache
-      - all
+    network_mode: "host"
     restart: always
 
   cache:

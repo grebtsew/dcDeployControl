@@ -27,7 +27,8 @@ A label system has been added that can help control the visualizations and other
 labels:
   - "global-ignore=all" # Global ignore specific network in the visualizations.
   - "global-use-defaults=true" # Global turn off or on the default group option.
-  - "group=frontend" # For this contianer set group, this will override network group detection.
+  - "group=frontend" # For this container set group, this will override network group detection.
+  - "network=frontend" # For this container set network, this will override network group detection.
   - "default=true" # For this contianer set to default, meaning this container will be included in the default group.
 ```
 
