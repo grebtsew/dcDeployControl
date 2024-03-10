@@ -677,13 +677,18 @@ function updateNodes(containers) {
         p = port[0];
       }
 
+      protocol = "http";
+      if (container.protocol !== "") {
+        protocol = container.protocol;
+      }
+
       // Create open website button
       const openWebsiteButton = document.createElement("button");
       openWebsiteButton.innerHTML = '<i class="fa fa-external-link"></i> ';
       openWebsiteButton.className = "smlbtn";
       openWebsiteButton.style.color = "white";
       openWebsiteButton.addEventListener("click", () =>
-        openWebsite(`http://localhost:${p}`),
+        openWebsite(`${protocol}://localhost:${p}/${container.path}`),
       );
       cardbuttoncontainer.appendChild(openWebsiteButton);
     }
@@ -891,6 +896,130 @@ function buildFlag() {
     flag = "--build";
   } else {
     flag = "";
+  }
+}
+
+function generateRandomId() {
+  return Math.random().toString(36).substring(2, 10);
+}
+
+const websiteId = generateRandomId();
+
+let websocket;
+
+const logsContainer = document.getElementById("logsContainer");
+
+var id = generateLogId();
+
+async function generateLogId() {
+  genFetch(data, "id", "GET", true).then((res) => {
+    //console.log(res);
+    return res.id;
+  });
+
+  try {
+    const response = await fetch("http://localhost:8000/id");
+    const data = await response.json();
+
+    if (response.ok) {
+      const logId = data.log_id;
+      return logId;
+    } else {
+      console.error("Error generating log ID:", data.detail);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error generating log ID:", error);
+    return null;
+  }
+}
+
+function showLog() {
+  logsContainer.style.display = "block";
+
+  // Open a WebSocket connection with a specific website ID
+  const websiteId = "example-website"; // Replace with the actual website ID
+  const websocket = new WebSocket(`ws://localhost:8000/ws/${websiteId}`); // Replace with your server address
+
+  // Set up event handlers for the WebSocket
+  websocket.onopen = (event) => {
+    //console.log("WebSocket connection opened:", event);
+  };
+
+  websocket.onmessage = (event) => {
+    // Append the received log entry to the logsContainer
+    const logElement = document.createElement("div");
+    logElement.textContent = event.data;
+    logsContainer.appendChild(logElement);
+
+    // Scroll to the bottom to show the latest logs
+    logsContainer.scrollTop = logsContainer.scrollHeight;
+  };
+
+  websocket.onclose = (event) => {
+    // console.log("WebSocket connection closed:", event);
+  };
+
+  websocket.onerror = (event) => {
+    console.error("WebSocket error:", event);
+  };
+}
+
+// Function to close the logs container
+function closeLogsContainer() {
+  logsContainer.style.display = "none";
+}
+
+// Make the logs container draggable
+dragElement(logsContainer);
+
+function dragElement(elmnt) {
+  let pos1 = 0,
+    pos2 = 0,
+    pos3 = 0,
+    pos4 = 0;
+  if (document.querySelector(".log-header")) {
+    // if present, the header is where you move the DIV from:
+    document.querySelector(".log-header").onmousedown = dragMouseDown;
+  } else {
+    // otherwise, move the DIV from anywhere inside the DIV:
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = elmnt.offsetTop - pos2 + "px";
+    elmnt.style.left = elmnt.offsetLeft - pos1 + "px";
+  }
+
+  function closeDragElement() {
+    // stop moving when mouse button is released:
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+
+function closeWebSocket() {
+  if (websocket) {
+    websocket.close();
   }
 }
 

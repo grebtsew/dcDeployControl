@@ -30,6 +30,8 @@ labels:
   - "group=frontend" # For this container set group, this will override network group detection.
   - "network=frontend" # For this container set network, this will override network group detection.
   - "default=true" # For this contianer set to default, meaning this container will be included in the default group.
+  - "protocol=https" # For this container set weblink protocol.
+  - "path=index.html" # For this contaienr set weblink path.
 ```
 
 # Main Features
@@ -43,6 +45,7 @@ The main features include:
 - **Label system** : Uses a label system, described above to let the user manipulate the visualization.
 - **Build and Clear function** : Build and clear functions has been added that runs the `build` and `down` command to clear up any issues with old running containers.
 - **Import and Export functions**: Docker save and load all images in system can be called. Only the volume folder can be used for import and export.
+- **Websocket logging link**: Show live logs from backend to better track system.
 
 # CI/CD
 

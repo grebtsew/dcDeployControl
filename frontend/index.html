@@ -43,10 +43,16 @@
             <i class="fas fa-arrow-circle-down" style="color: yellow"></i>
             Export
           </button>
+          <button class="smlbtn" onclick="showLog()">
+            <i class="fas fa-file-alt" style="color: purple"></i>
+            Log
+          </button>
+
           <div class="card-network">
             <input id="build" type="checkbox" onclick="buildFlag()" />
             <label for="build">Build on Run <i class="fas fa-cogs"></i> </label>
           </div>
+
           <div class="card-network">
             <input
               id="dark"
@@ -85,6 +91,13 @@
       </div>
       <div id="drag-handle"></div>
       <div id="graph-container"></div>
+
+      <div id="logsContainer" class="log-container">
+        <div class="log-header">
+          <span class="close-btn" onclick="closeLogsContainer()">&times;</span>
+        </div>
+        <div class="log-content"></div>
+      </div>
     </main>
 
     <script src="./utils/script.js"></script>

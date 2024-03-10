@@ -1,5 +1,5 @@
 # main.py
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from typing import List
 import docker
@@ -10,6 +10,7 @@ import uvicorn
 from datetime import datetime
 import asyncio
 import logging
+from uuid import uuid4
 
 # Configure the logger
 logger = logging.getLogger("dcdc_logger")
@@ -73,10 +74,63 @@ class ContainerStatus(BaseModel):
 
 
 class ContainerInfo(BaseModel):
-    container_name: str
-    networks_used: List[str]
-    labels_used: List[str]
-    exposed_ports: List[str]
+    container_name: str = []
+    networks_used: List[str] = []
+    labels_used: List[str] = []
+    exposed_ports: List[str] = []
+    path: str = ""
+    protocol: str = ""
+
+
+connected_websockets = set()
+
+
+class WebSocketLogHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = self.format(record)
+        asyncio.create_task(send_logs_to_clients(log_entry))
+
+
+async def send_logs_to_clients(log_entry):
+    for websocket in connected_websockets:
+        try:
+            await websocket.send_text(log_entry)
+        except WebSocketDisconnect:
+            # Remove disconnected websocket
+            connected_websockets.remove(websocket)
+
+
+# Add the custom WebSocketLogHandler to the root logger
+logging.getLogger().addHandler(WebSocketLogHandler())
+
+# In-memory storage for logs per website
+logs_per_website = {}
+
+
+@app.get("/id")
+async def generate_log_id():
+    log_id = str(uuid4())
+    logs_per_website[log_id] = log_id
+    return {"id": log_id}
+
+
+@app.websocket("/ws/{website_id}")
+async def websocket_endpoint(website_id: str, websocket: WebSocket):
+    await websocket.accept()
+    connected_websockets.add(websocket)
+
+    try:
+        # Continuously send logs to the client until the WebSocket is closed
+        while True:
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        # Remove the website_id when the WebSocket is closed
+        connected_websockets.remove(websocket)
+
+
+# Function to add logs to the list for a specific website
+def add_log(website_id, log_entry):
+    logs_per_website[website_id].append(log_entry)
 
 
 @app.post("/parse-docker-compose", response_model=List[ContainerInfo])
@@ -95,6 +149,8 @@ async def parse_docker_compose(data: DockerComposeInfo):
                 container_name = service_name
                 networks_used = service_config.get("networks", [])
                 labels_used = service_config.get("labels", [])
+                protocol = ""
+                path = ""
 
                 # Add manuel networks
                 for label in labels_used:
@@ -103,6 +159,10 @@ async def parse_docker_compose(data: DockerComposeInfo):
                         [key, name] = tmp
                         if key == "network":
                             networks_used.append(name)
+                        if key == "path":
+                            pass
+                        if key == "protocol":
+                            pass
 
                 exposed_ports = service_config.get("ports", [])
                 container_info_list.append(
@@ -111,6 +171,8 @@ async def parse_docker_compose(data: DockerComposeInfo):
                         networks_used=networks_used,
                         labels_used=labels_used,
                         exposed_ports=exposed_ports,
+                        protocol=protocol,
+                        path=path,
                     )
                 )
 
@@ -288,8 +350,6 @@ async def get_running_containers_with_networks():
                     ContainerInfo(
                         container_name=container.name,
                         networks_used=get_container_networks(container),
-                        labels_used=[],
-                        exposed_ports=[],
                     )
                 )
 
