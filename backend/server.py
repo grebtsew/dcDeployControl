@@ -134,7 +134,7 @@ async def generate_log_id():
         return True
 
     except Exception as e:
-        logger.error(f"Build all => An error occurred: {e}")
+        logger.error(f"Shutdown => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -217,6 +217,8 @@ async def parse_docker_compose(data: DockerComposeInfo):
                                 path = value
                             if key == "protocol":
                                 protocol = value
+                            if key == "ignore-ports":
+                                exposed_ports = []
 
                 container_info_list.append(
                     ContainerInfo(
@@ -240,13 +242,16 @@ async def awaitTask(command):
     process = await asyncio.create_subprocess_exec(
         *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
-    await process.wait()
-    # Log stdout
-    async for line in process.stdout:
-        logger.info(f"{line.decode().strip()}")
-    # Log stderr
-    async for line in process.stderr:
-        logger.info(f"{line.decode().strip()}")
+
+    async def log_stream(stream, logger):
+        async for line in stream:
+            logger.info(line.decode().strip())
+
+    await asyncio.gather(
+        log_stream(process.stdout, logger),
+        log_stream(process.stderr, logger),
+        process.wait(),
+    )
 
     logger.info(f"Task {command} completed successfully.")
 
@@ -290,6 +295,8 @@ async def build_all(data: StartContainer):
     """
     try:
         command = ["docker-compose", "-f", data.docker_compose_path, "build"]
+        await awaitTask(command)
+        command = ["docker-compose", "-f", data.docker_compose_path, "pull"]
         await awaitTask(command)
         return True
 
@@ -491,7 +498,9 @@ async def stop_containers(data: StartContainer):
     """
     try:
         docker_compose_path = data.docker_compose_path
-        val = ["docker-compose", "-f", docker_compose_path, "down", "-v"]
+        val = ["docker-compose", "-f", docker_compose_path, "down"]
+        if data.flags != "":
+            val.append(data.flags)
         await awaitTask(val)
         return True
     except Exception as e:

@@ -16,6 +16,7 @@ services:
       - "group=frontend"
       - "default=true"
       - "protocol=http"
+
       - "path=/"
     ports:
       - "127.0.0.1:8081:80"
@@ -30,6 +31,7 @@ services:
       - all
     labels:
       - "group=frontend"
+      - "ignore-ports=true"
     ports:
       - "8082:80"
     restart: always

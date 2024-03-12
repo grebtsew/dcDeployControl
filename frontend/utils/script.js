@@ -345,6 +345,7 @@ const fileInput = document.getElementById("fileInput");
 fileInput.addEventListener("change", importClicked);
 
 var flag = "";
+var vflag = "";
 
 var darkmode_var = false;
 
@@ -909,6 +910,16 @@ function buildFlag() {
   }
 }
 
+function buildFlag() {
+  // Toggle build flag value
+  const checkbox = document.getElementById("build");
+  if (checkbox.checked) {
+    vflag = "-v";
+  } else {
+    vflag = "";
+  }
+}
+
 function generateRandomId() {
   return Math.random().toString(36).substring(2, 10);
 }
@@ -1201,7 +1212,7 @@ function clearClicked() {
   const data = {
     docker_compose_path: dockerComposePath.file_path,
     container: "",
-    flags: flag,
+    flags: vflag,
   };
 
   showLoader("clear");
