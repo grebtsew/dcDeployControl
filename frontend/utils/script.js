@@ -1182,6 +1182,16 @@ function toggleNetworkVisibility(network) {
   });
 }
 
+function shutdown() {
+  showToast("Shutting down all...");
+
+  clearClicked();
+
+  genFetch(NaN, "shutdown", "GET").then(
+    alert("dcDeployControl will be terminated in a few seconds."),
+  );
+}
+
 function clearClicked() {
   // Runs docker-compose down to remove network along with containers.
   showToast("Clearing docker-compose...");
@@ -1195,10 +1205,14 @@ function clearClicked() {
   };
 
   showLoader("clear");
-  genFetch(data, "clear").then(() => {
-    hideLoader("clear");
-    showToast("Clearing all containers and networks complete!");
-  });
+  genFetch(data, "clear")
+    .then(() => {
+      hideLoader("clear");
+      showToast("Clearing all containers and networks complete!");
+    })
+    .catch((error) => {
+      hideLoader("clear");
+    });
 }
 
 function showLoader(name) {
@@ -1241,10 +1255,14 @@ function buildClicked() {
   };
 
   showLoader("build");
-  genFetch(data, "build-all").then(() => {
-    hideLoader("build");
-    showToast("Building all containers complete!");
-  });
+  genFetch(data, "build-all")
+    .then(() => {
+      hideLoader("build");
+      showToast("Building all containers complete!");
+    })
+    .catch((error) => {
+      hideLoader("build");
+    });
 }
 
 function getContainersWithCheckedBoxes(color) {
@@ -1254,19 +1272,28 @@ function getContainersWithCheckedBoxes(color) {
       `checkbox-container-${container.container_name}`,
     );
 
-    if (checkbox.checked === true) {
-      const label = checkbox.nextElementSibling;
-      if (label.style.color != color) {
-        const loader = document.getElementById(
-          `loader-${container.container_name}`,
-        );
-        loader.hidden = false;
+    var skip = false;
+    container.labels_used.forEach((label) => {
+      if (label === "controllable=false") {
+        skip = true;
       }
-      tmp.push({
-        docker_compose_path: dockerComposePath.file_path,
-        container: container.container_name,
-        flags: flag,
-      });
+    });
+
+    if (!skip) {
+      if (checkbox.checked === true) {
+        const label = checkbox.nextElementSibling;
+        if (label.style.color != color) {
+          const loader = document.getElementById(
+            `loader-${container.container_name}`,
+          );
+          loader.hidden = false;
+        }
+        tmp.push({
+          docker_compose_path: dockerComposePath.file_path,
+          container: container.container_name,
+          flags: flag,
+        });
+      }
     }
   });
   return tmp;
@@ -1284,9 +1311,13 @@ function startClicked() {
   showToast("Starting selected containers...");
 
   showLoader("start");
-  genFetch(tmp, "start-containers").then(() => {
-    hideLoader("start");
-  });
+  genFetch(tmp, "start-containers")
+    .then(() => {
+      hideLoader("start");
+    })
+    .catch((error) => {
+      hideLoader("start");
+    });
 }
 
 function stopClicked() {
@@ -1301,9 +1332,13 @@ function stopClicked() {
   showToast("Stopping selected containers...");
 
   showLoader("stop");
-  genFetch(tmp, "stop-containers").then(() => {
-    hideLoader("stop");
-  });
+  genFetch(tmp, "stop-containers")
+    .then(() => {
+      hideLoader("stop");
+    })
+    .catch((error) => {
+      hideLoader("stop");
+    });
 }
 
 async function stopContainer(containerToStop) {
@@ -1316,7 +1351,9 @@ async function stopContainer(containerToStop) {
     flags: flag,
   };
 
-  genFetch(data, "stop-container");
+  genFetch(data, "stop-container").catch((error) => {
+    hideLoader(containerToStop.container_name);
+  });
 }
 
 async function startContainer(containerToStart) {
@@ -1330,7 +1367,9 @@ async function startContainer(containerToStart) {
     flags: flag,
   };
 
-  genFetch(data, "start-container");
+  genFetch(data, "start-container").catch((error) => {
+    hideLoader(containerToStart.container_name);
+  });
 }
 
 async function getRunningContainers() {
@@ -1431,9 +1470,13 @@ function importClicked(event) {
     file_path: `/docker/${selectedFile.name}`,
   };
 
-  genFetch(data, "import-images", "POST", true).then(() => {
-    hideLoader("import");
-  });
+  genFetch(data, "import-images", "POST", true)
+    .then(() => {
+      hideLoader("import");
+    })
+    .catch((error) => {
+      hideLoader("import");
+    });
 }
 
 function exportClicked() {
@@ -1448,7 +1491,11 @@ function exportClicked() {
     file_path: `/docker/${tarballname}`,
   };
 
-  genFetch(data, "export-images", "POST", true).then(() => {
-    hideLoader("export");
-  });
+  genFetch(data, "export-images", "POST", true)
+    .then(() => {
+      hideLoader("export");
+    })
+    .catch((error) => {
+      hideLoader("export");
+    });
 }

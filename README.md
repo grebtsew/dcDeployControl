@@ -15,7 +15,7 @@ Checkout the demo gif below!
 1. Download or clone the repository.
 2. Install docker and docker-compose.
 3. Open `.env` file and change `PROJECT_PATH="./example"` to whichever path your docker-compose project has.
-4. Start **dcDeployControl** by running `docker-compose up`.
+4. Start **dcDeployControl** by running `docker-compose up -d`.
 
 **Note**: The `PROJECT_PATH` will be volumed, meaning that changing the docker-compose file does not require a restart of **dcDeployControl**.
 

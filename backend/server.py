@@ -7,11 +7,14 @@ import yaml
 import subprocess
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from datetime import datetime
+
+# from datetime import datetime
 import asyncio
 import logging
 from uuid import uuid4
 import json
+import time
+import threading
 
 # Configure the logger
 logger = logging.getLogger("dcdc_logger")
@@ -20,7 +23,6 @@ logger.setLevel(logging.DEBUG)
 
 # Function to generate the log file name based on the current hour
 def generate_log_file_name():
-    # current_hour = datetime.now().strftime("%Y%m%d%H")
     return f"./frontend/dcdc.log"
 
 
@@ -58,6 +60,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+logger.info("Started dcDeployControl backend vAlpha0.1")
 
 
 class DockerComposeInfo(BaseModel):
@@ -106,6 +110,32 @@ logging.getLogger().addHandler(WebSocketLogHandler())
 
 # In-memory storage for logs per website
 logs_per_website = {}
+
+
+def shutdown():
+    command = ["docker", "stop", "dcDeployControl"]
+
+    # Wait for 2 seconds
+    time.sleep(2)
+    logging.info("Shuting down system.")
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        pass
+
+
+@app.get("/shutdown")
+async def generate_log_id():
+    try:
+        stop_thread = threading.Thread(target=shutdown)
+        stop_thread.start()
+
+        # await awaitTask(command)
+        return True
+
+    except Exception as e:
+        logger.error(f"Build all => An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
 @app.get("/id")
@@ -207,8 +237,17 @@ async def parse_docker_compose(data: DockerComposeInfo):
 
 async def awaitTask(command):
     logger.info(f"Running task {command}")
-    process = await asyncio.create_subprocess_exec(*command)
+    process = await asyncio.create_subprocess_exec(
+        *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
     await process.wait()
+    # Log stdout
+    async for line in process.stdout:
+        logger.info(f"{line.decode().strip()}")
+    # Log stderr
+    async for line in process.stderr:
+        logger.info(f"{line.decode().strip()}")
+
     logger.info(f"Task {command} completed successfully.")
 
 
