@@ -20,8 +20,8 @@ logger.setLevel(logging.DEBUG)
 
 # Function to generate the log file name based on the current hour
 def generate_log_file_name():
-    current_hour = datetime.now().strftime("%Y%m%d%H")
-    return f"/app/frontend/dcdc.log"
+    # current_hour = datetime.now().strftime("%Y%m%d%H")
+    return f"./frontend/dcdc.log"
 
 
 # Create a file handler and set the logging level to DEBUG
