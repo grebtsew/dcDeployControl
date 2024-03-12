@@ -32,6 +32,7 @@ labels:
   - "default=true" # For this contianer set to default, meaning this container will be included in the default group.
   - "protocol=https" # For this container set weblink protocol.
   - "path=index.html" # For this contaienr set weblink path.
+  - '[{"container": "custom","networks": ["frontend"], "labels": ["default=true","controllable=false"], "ports": ["9090:9090"]}]' # Add custom container
 ```
 
 # Main Features

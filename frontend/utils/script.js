@@ -606,6 +606,7 @@ function updateNodes(containers) {
       }
     });
 
+    var controllable = true;
     // update ignore list
     container.labels_used.forEach((lab) => {
       const keyValuePairs = lab.split("=");
@@ -621,6 +622,9 @@ function updateNodes(containers) {
       }
       if (field === "default") {
         isDefault = value;
+      }
+      if (field === "controllable") {
+        controllable = value;
       }
 
       if (field === "group") {
@@ -651,19 +655,23 @@ function updateNodes(containers) {
     label.htmlFor = `checkbox-container-${container.container_name}`;
     label.appendChild(document.createTextNode(container.container_name));
 
-    // Create start button icon
-    const startButton = document.createElement("button");
-    startButton.innerHTML = '<i class="fa fa-play"></i>';
-    startButton.className = "smlbtn";
-    startButton.style.color = "green";
-    startButton.addEventListener("click", () => startContainer(container));
+    var startButton;
+    var stopButton;
+    if (controllable === true || controllable === "true") {
+      // Create start button icon
+      startButton = document.createElement("button");
+      startButton.innerHTML = '<i class="fa fa-play"></i>';
+      startButton.className = "smlbtn";
+      startButton.style.color = "green";
+      startButton.addEventListener("click", () => startContainer(container));
 
-    // Create stop button icon
-    const stopButton = document.createElement("button");
-    stopButton.innerHTML = '<i class="fa fa-stop"></i> ';
-    stopButton.className = "smlbtn";
-    stopButton.style.color = "red";
-    stopButton.addEventListener("click", () => stopContainer(container));
+      // Create stop button icon
+      stopButton = document.createElement("button");
+      stopButton.innerHTML = '<i class="fa fa-stop"></i> ';
+      stopButton.className = "smlbtn";
+      stopButton.style.color = "red";
+      stopButton.addEventListener("click", () => stopContainer(container));
+    }
 
     const cardbuttoncontainer = document.createElement("div");
     cardbuttoncontainer.className = "cardbuttoncontainer";
@@ -702,8 +710,10 @@ function updateNodes(containers) {
     loader.id = `loader-${container.container_name}`;
     loader.hidden = true;
 
-    cardbuttoncontainer.appendChild(stopButton);
-    cardbuttoncontainer.appendChild(startButton);
+    if (controllable === true || controllable === "true") {
+      cardbuttoncontainer.appendChild(stopButton);
+      cardbuttoncontainer.appendChild(startButton);
+    }
 
     card.appendChild(cardbuttoncontainer);
     card.appendChild(loader);
@@ -908,6 +918,7 @@ const websiteId = generateRandomId();
 let websocket;
 
 const logsContainer = document.getElementById("logsContainer");
+const logsContentContainer = document.getElementById("log-content");
 
 var id = generateLogId();
 
@@ -950,10 +961,10 @@ function showLog() {
     // Append the received log entry to the logsContainer
     const logElement = document.createElement("div");
     logElement.textContent = event.data;
-    logsContainer.appendChild(logElement);
+    logsContentContainer.appendChild(logElement);
 
     // Scroll to the bottom to show the latest logs
-    logsContainer.scrollTop = logsContainer.scrollHeight;
+    logsContentContainer.scrollTop = logsContentContainer.scrollHeight;
   };
 
   websocket.onclose = (event) => {
@@ -968,6 +979,10 @@ function showLog() {
 // Function to close the logs container
 function closeLogsContainer() {
   logsContainer.style.display = "none";
+}
+
+function openLog() {
+  openWebsite(`http://localhost/dcdc.log`);
 }
 
 // Make the logs container draggable

@@ -17,7 +17,19 @@
     </header>
 
     <main>
+      <div id="logsContainer" class="log-container">
+        <div class="log-header">
+          <div style="float: left">Backend Log</div>
+          <span class="close-btn" onclick="openLog()"
+            ><i class="fas fa-file-alt"></i
+          ></span>
+          <span class="close-btn" onclick="closeLogsContainer()">&times;</span>
+        </div>
+        <div id="log-content" class="log-content"></div>
+      </div>
+
       <input type="file" id="fileInput" style="display: none" />
+
       <div id="control-panel">
         <div id="content">
           <h1>Tools</h1>
@@ -91,13 +103,6 @@
       </div>
       <div id="drag-handle"></div>
       <div id="graph-container"></div>
-
-      <div id="logsContainer" class="log-container">
-        <div class="log-header">
-          <span class="close-btn" onclick="closeLogsContainer()">&times;</span>
-        </div>
-        <div class="log-content"></div>
-      </div>
     </main>
 
     <script src="./utils/script.js"></script>
@@ -144,6 +149,48 @@
           location.reload();
         }, 500);
       });
+
+      function makeResizable(element) {
+        let startX, startY, startWidth, startHeight;
+
+        const resizer = document.createElement("div");
+        resizer.style.width = "10px";
+        resizer.style.height = "10px";
+        resizer.style.background = "#000";
+        resizer.style.position = "absolute";
+        resizer.style.bottom = "0";
+        resizer.style.right = "0";
+        resizer.style.cursor = "se-resize";
+
+        element.appendChild(resizer);
+
+        resizer.addEventListener("mousedown", function (e) {
+          e.preventDefault();
+
+          startWidth = element.offsetWidth;
+          startHeight = element.offsetHeight;
+          startX = e.clientX;
+          startY = e.clientY;
+
+          document.addEventListener("mousemove", resizeElement);
+          document.addEventListener("mouseup", function () {
+            document.removeEventListener("mousemove", resizeElement);
+          });
+        });
+
+        function resizeElement(e) {
+          const newWidth = startWidth + e.clientX - startX;
+          const newHeight = startHeight + e.clientY - startY;
+
+          element.style.width = newWidth + "px";
+          element.style.height = newHeight + "px";
+        }
+      }
+
+      // Make the log container both draggable and resizable
+      const logContainer = document.getElementById("logsContainer");
+
+      makeResizable(logContainer);
     </script>
   </body>
 </html>

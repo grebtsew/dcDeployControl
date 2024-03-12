@@ -95,6 +95,7 @@ services:
     image: prom/prometheus
     labels:
       - "group=monitoring"
+      #- '[{"container": "custom","networks": ["frontend"], "labels": ["default=true","controllable=false"], "ports": ["9090:9090"]}]'
     networks:
       - frontend
       - backend

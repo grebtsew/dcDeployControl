@@ -11,6 +11,7 @@ from datetime import datetime
 import asyncio
 import logging
 from uuid import uuid4
+import json
 
 # Configure the logger
 logger = logging.getLogger("dcdc_logger")
@@ -20,7 +21,7 @@ logger.setLevel(logging.DEBUG)
 # Function to generate the log file name based on the current hour
 def generate_log_file_name():
     current_hour = datetime.now().strftime("%Y%m%d%H")
-    return f"./dcdc_{current_hour}.log"
+    return f"/app/frontend/dcdc.log"
 
 
 # Create a file handler and set the logging level to DEBUG
@@ -133,6 +134,14 @@ def add_log(website_id, log_entry):
     logs_per_website[website_id].append(log_entry)
 
 
+def isJson(label):
+    try:
+        json.loads(label)
+        return True
+    except json.JSONDecodeError:
+        return False
+
+
 @app.post("/parse-docker-compose", response_model=List[ContainerInfo])
 async def parse_docker_compose(data: DockerComposeInfo):
     """
@@ -144,27 +153,41 @@ async def parse_docker_compose(data: DockerComposeInfo):
 
         container_info_list = []
 
+        # process all containers
         if "services" in compose_data:
             for service_name, service_config in compose_data["services"].items():
+
                 container_name = service_name
                 networks_used = service_config.get("networks", [])
                 labels_used = service_config.get("labels", [])
                 protocol = ""
                 path = ""
+                exposed_ports = service_config.get("ports", [])
 
                 # Add manuel networks
                 for label in labels_used:
-                    tmp = label.split("=")
-                    if len(tmp) == 2:
-                        [key, name] = tmp
-                        if key == "network":
-                            networks_used.append(name)
-                        if key == "path":
-                            pass
-                        if key == "protocol":
-                            pass
+                    if isJson(label):
+                        json_arr = json.loads(label)
+                        for label in json_arr:
+                            print(label)
+                            json_data = label
+                            container_name = json_data["container"]
+                            networks_used = json_data["networks"]
+                            labels_used = json_data["labels"]
+                            exposed_ports = json_data["ports"]
 
-                exposed_ports = service_config.get("ports", [])
+                    else:
+
+                        tmp = label.split("=")
+                        if len(tmp) == 2:
+                            [key, value] = tmp
+                            if key == "network":
+                                networks_used.append(value)
+                            if key == "path":
+                                path = value
+                            if key == "protocol":
+                                protocol = value
+
                 container_info_list.append(
                     ContainerInfo(
                         container_name=container_name,
@@ -429,7 +452,7 @@ async def stop_containers(data: StartContainer):
     """
     try:
         docker_compose_path = data.docker_compose_path
-        val = ["docker-compose", "-f", docker_compose_path, "down"]
+        val = ["docker-compose", "-f", docker_compose_path, "down", "-v"]
         await awaitTask(val)
         return True
     except Exception as e:
