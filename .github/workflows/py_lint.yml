@@ -29,4 +29,5 @@ jobs:
           pylint ./backend > pylint_report.txt || true
           score=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint_report.txt)
           echo "Pylint score: $score"
-          echo "PYLINT_SCORE=$score" > pylint.env
+          echo "PYLIST_SCORE=$score" >> $GITHUB_ENV
+        shell: bash
