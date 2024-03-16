@@ -30,3 +30,4 @@ jobs:
           score=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint_report.txt)
           echo "Pylint score: $score"
           echo "{name}={$score}" >> $GITHUB_OUTPUT
+          echo "{name}={$score}" >> $GITHUB_STATE
