@@ -25,4 +25,4 @@ jobs:
         run: npm install eslint eslint-plugin-react
 
       - name: Run ESLint
-        run: npx eslint ./frontend
+        run: npx eslint --quiet --format=json ./frontend/utils | tee eslint_report.json

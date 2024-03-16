@@ -910,7 +910,7 @@ function buildFlag() {
   }
 }
 
-function buildFlag() {
+function volumeFlag() {
   // Toggle build flag value
   const checkbox = document.getElementById("build");
   if (checkbox.checked) {

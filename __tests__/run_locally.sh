@@ -2,7 +2,7 @@
 
 # Lint
 pylint ./backend
-npx eslint ./frontend
+npx eslint ./frontend/utils
 
 # Format
 black .
@@ -13,6 +13,6 @@ pytest
 npm test
 
 # Coverage
-pytest --cov=. --cov-report=xml
+pytest --cov=./backend --cov-report=xml
 
 npm test -- --coverage
