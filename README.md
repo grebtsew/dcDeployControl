@@ -50,6 +50,7 @@ The main features include:
 
 # CI/CD
 
+
 To ensure that the project maintains a high quality code, several CI/CD github actions has been added to the project. These must pass in order to get pull requests merged into main branch.
 
 The workflows include:
