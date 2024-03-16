@@ -7,6 +7,7 @@ import yaml
 import subprocess
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import traceback
 
 # from datetime import datetime
 import asyncio
@@ -171,6 +172,19 @@ def isJson(label):
     except json.JSONDecodeError:
         return False
 
+def handleLabelExceptions(label, networks_used,path,protocol,exposed_ports):
+    tmp = label.split("=")
+    if len(tmp) == 2:
+        [key, value] = tmp
+        if key == "network":
+            networks_used.append(value)
+        if key == "path":
+            path = value
+        if key == "protocol":
+            protocol = value
+        if key == "ignore-ports":
+            exposed_ports = []
+    return networks_used, path, protocol, exposed_ports
 
 @app.post("/parse-docker-compose", response_model=List[ContainerInfo])
 async def parse_docker_compose(data: DockerComposeInfo):
@@ -199,26 +213,18 @@ async def parse_docker_compose(data: DockerComposeInfo):
                     if isJson(label):
                         json_arr = json.loads(label)
                         for label in json_arr:
-                            print(label)
                             json_data = label
                             container_name = json_data["container"]
                             networks_used = json_data["networks"]
                             labels_used = json_data["labels"]
                             exposed_ports = json_data["ports"]
 
+                        # Handle exceptions
+                        for label in labels_used:
+                            networks_used, path, protocol, exposed_ports = handleLabelExceptions(label, networks_used,path,protocol,exposed_ports)
                     else:
-
-                        tmp = label.split("=")
-                        if len(tmp) == 2:
-                            [key, value] = tmp
-                            if key == "network":
-                                networks_used.append(value)
-                            if key == "path":
-                                path = value
-                            if key == "protocol":
-                                protocol = value
-                            if key == "ignore-ports":
-                                exposed_ports = []
+                        # Handle exceptions
+                        networks_used, path, protocol, exposed_ports = handleLabelExceptions(label, networks_used,path,protocol,exposed_ports)
 
                 container_info_list.append(
                     ContainerInfo(
@@ -233,7 +239,7 @@ async def parse_docker_compose(data: DockerComposeInfo):
 
         return container_info_list
     except Exception as e:
-        logger.error(f"Parse Docker Compose => An error occurred: {e}")
+        logger.error(f"Parse Docker Compose => An error occurred: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -255,6 +261,48 @@ async def awaitTask(command):
 
     logger.info(f"Task {command} completed successfully.")
 
+
+@app.post("/connect-to-internet", response_model=bool)
+async def export_images(data: DockerComposeInfo):
+    """
+    Connect container to a network with internet interface access.
+    """
+    try:
+        # TODO: add container to a network with internet access
+        command = ["docker" , "networks", "connect"] 
+        await awaitTask(command)
+        return True
+    except Exception as e:
+        logger.error(f"Connect to internet network => An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
+@app.post("/reset-network", response_model=bool)
+async def export_images(data: DockerComposeInfo):
+    """
+    Disconnect container from all networks with internet interface access.
+    """
+    try:
+        # TODO: remove container from internet access network
+        command = ["docker", "networks", "disconnect"] 
+        await awaitTask(command)
+        return True
+    except Exception as e:
+        logger.error(f"Reset to default network => An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+    
+@app.post("/disconnect-network", response_model=bool)
+async def export_images(data: DockerComposeInfo):
+    """
+    Disconnect container from all networks with internet interface access.
+    """
+    try:
+        # TODO: remove container from internet access network
+        command = ["docker", "networks", "disconnect"] 
+        await awaitTask(command)
+        return True
+    except Exception as e:
+        logger.error(f"Disconnect from internet network => An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @app.post("/export-images", response_model=bool)
 async def export_images(data: DockerComposeInfo):

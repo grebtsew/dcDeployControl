@@ -1193,6 +1193,10 @@ function toggleNetworkVisibility(network) {
   });
 }
 
+function internetClicked(){
+  
+}
+
 function shutdown() {
   showToast("Shutting down all...");
 

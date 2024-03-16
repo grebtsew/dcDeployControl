@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     docker.io \
     docker-compose \
+    docker-buildx \
     nginx
 
 COPY ./backend/requirements.txt /requirements.txt
@@ -23,6 +24,8 @@ COPY . /app
 
 # Expose the port the app runs on
 EXPOSE 80
+
+ENV DOCKER_BUILDKIT=1
 
 # Run Nginx and the Python app when the container launches
 CMD service nginx start && python3 /app/backend/server.py
