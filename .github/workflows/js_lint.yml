@@ -26,3 +26,11 @@ jobs:
 
       - name: Run ESLint
         run: npx eslint --quiet --format=json ./frontend/utils | tee eslint_report.json
+
+      - name: Process ESLint Report
+        run: |
+          errors=$(jq '.[0].errorCount' eslint_report.json)
+          warnings=$(jq '.[0].warningCount' eslint_report.json)
+          total=$((errors + warnings))
+          code_score=$((100 - total))
+          echo "Code Score: $code_score"
