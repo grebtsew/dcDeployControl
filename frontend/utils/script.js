@@ -812,7 +812,7 @@ function updateRunningNodes(_containers) {
     });
   }
 
-  // Create a list to hold checkboxes
+  // Handle free running containers
 
   var running_unique = [];
   _containers.forEach((container) => {

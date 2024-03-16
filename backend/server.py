@@ -294,9 +294,9 @@ async def build_all(data: StartContainer):
     Recommend running this atleast once first time.
     """
     try:
-        command = ["docker-compose", "-f", data.docker_compose_path, "build"]
-        await awaitTask(command)
         command = ["docker-compose", "-f", data.docker_compose_path, "pull"]
+        await awaitTask(command)
+        command = ["docker-compose", "-f", data.docker_compose_path, "build"]
         await awaitTask(command)
         return True
 
