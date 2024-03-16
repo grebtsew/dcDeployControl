@@ -54,10 +54,17 @@ To ensure that the project maintains a high quality code, several CI/CD github a
 
 The workflows include:
 
-- **Docker Build** : Makes sure the Dockerfile can build.
-- **JS Format** : Makes sure js files and yml files follow `Prettier` format. To test locally install `npm install --global prettier` and run `prettier --write .`.
-- **PY Format** : Makes sure py files follow `Black` format. To test locally install `pip install black` and run `black .`.
-- **Run Pytest** : Makes sure unit tests on backend passes. See `Testing` below fore more descriptions.
+| Test Description             | Badge                                                                                                                                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build Docker Container       | [![Build Docker Container](https://github.com/grebtsew/dcDeployControl/actions/workflows/build_docker.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/build_docker.yml)     |
+| Check Javascript Format      | [![Check Javascript Format](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_format.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_format.yml)          |
+| Check Python Format          | [![Check Python Format](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_format.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_format.yml)              |
+| Run Pytest                   | [![Run Pytest](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_unit_test.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_unit_test.yml)                 |
+| ESLint Check                 | [![ESLint Check](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_lint.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_lint.yml)                         |
+| JavaScript Test and Coverage | [![JavaScript Test and Coverage](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_coverage.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_coverage.yml) |
+| JavaScript Tests             | [![JavaScript Tests](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_unit_test.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_unit_test.yml)           |
+| Pylint Check                 | [![Pylint Check](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_lint.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_lint.yml)                         |
+| Python Test and Coverage     | [![Python Test and Coverage](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_coverage.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_coverage.yml)     |
 
 # Unit Testing
 
