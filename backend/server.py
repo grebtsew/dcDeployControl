@@ -172,7 +172,8 @@ def isJson(label):
     except json.JSONDecodeError:
         return False
 
-def handleLabelExceptions(label, networks_used,path,protocol,exposed_ports):
+
+def handleLabelExceptions(label, networks_used, path, protocol, exposed_ports):
     tmp = label.split("=")
     if len(tmp) == 2:
         [key, value] = tmp
@@ -185,6 +186,7 @@ def handleLabelExceptions(label, networks_used,path,protocol,exposed_ports):
         if key == "ignore-ports":
             exposed_ports = []
     return networks_used, path, protocol, exposed_ports
+
 
 @app.post("/parse-docker-compose", response_model=List[ContainerInfo])
 async def parse_docker_compose(data: DockerComposeInfo):
@@ -221,10 +223,18 @@ async def parse_docker_compose(data: DockerComposeInfo):
 
                         # Handle exceptions
                         for label in labels_used:
-                            networks_used, path, protocol, exposed_ports = handleLabelExceptions(label, networks_used,path,protocol,exposed_ports)
+                            networks_used, path, protocol, exposed_ports = (
+                                handleLabelExceptions(
+                                    label, networks_used, path, protocol, exposed_ports
+                                )
+                            )
                     else:
                         # Handle exceptions
-                        networks_used, path, protocol, exposed_ports = handleLabelExceptions(label, networks_used,path,protocol,exposed_ports)
+                        networks_used, path, protocol, exposed_ports = (
+                            handleLabelExceptions(
+                                label, networks_used, path, protocol, exposed_ports
+                            )
+                        )
 
                 container_info_list.append(
                     ContainerInfo(
@@ -239,7 +249,9 @@ async def parse_docker_compose(data: DockerComposeInfo):
 
         return container_info_list
     except Exception as e:
-        logger.error(f"Parse Docker Compose => An error occurred: {e}\n{traceback.format_exc()}")
+        logger.error(
+            f"Parse Docker Compose => An error occurred: {e}\n{traceback.format_exc()}"
+        )
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
@@ -269,12 +281,13 @@ async def export_images(data: DockerComposeInfo):
     """
     try:
         # TODO: add container to a network with internet access
-        command = ["docker" , "networks", "connect"] 
+        command = ["docker", "networks", "connect"]
         await awaitTask(command)
         return True
     except Exception as e:
         logger.error(f"Connect to internet network => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
 
 @app.post("/reset-network", response_model=bool)
 async def export_images(data: DockerComposeInfo):
@@ -283,13 +296,14 @@ async def export_images(data: DockerComposeInfo):
     """
     try:
         # TODO: remove container from internet access network
-        command = ["docker", "networks", "disconnect"] 
+        command = ["docker", "networks", "disconnect"]
         await awaitTask(command)
         return True
     except Exception as e:
         logger.error(f"Reset to default network => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
-    
+
+
 @app.post("/disconnect-network", response_model=bool)
 async def export_images(data: DockerComposeInfo):
     """
@@ -297,12 +311,13 @@ async def export_images(data: DockerComposeInfo):
     """
     try:
         # TODO: remove container from internet access network
-        command = ["docker", "networks", "disconnect"] 
+        command = ["docker", "networks", "disconnect"]
         await awaitTask(command)
         return True
     except Exception as e:
         logger.error(f"Disconnect from internet network => An error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
 
 @app.post("/export-images", response_model=bool)
 async def export_images(data: DockerComposeInfo):

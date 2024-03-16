@@ -1193,9 +1193,7 @@ function toggleNetworkVisibility(network) {
   });
 }
 
-function internetClicked(){
-  
-}
+function internetClicked() {}
 
 function shutdown() {
   showToast("Shutting down all...");

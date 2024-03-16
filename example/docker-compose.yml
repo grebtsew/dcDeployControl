@@ -3,7 +3,6 @@
 version: "3"
 
 services:
-
   webapp1:
     container_name: webapp1
     image: nginx
@@ -34,7 +33,7 @@ services:
     networks:
       - frontend
       - all
-    labels: 
+    labels:
       - "default=true"
     restart: always
 
@@ -52,7 +51,6 @@ services:
       - "8082:80/tcp"
     user: "nginx"
     restart: always
-    
 
   database1:
     container_name: database1
