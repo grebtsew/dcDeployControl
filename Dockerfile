@@ -22,6 +22,8 @@ COPY ./frontend/nginx.conf /etc/nginx/sites-available/default
 # Copy the current directory contents into the container at /app
 COPY . /app
 
+RUN mkdir /app/logs
+
 # Expose the port the app runs on
 EXPOSE 80
 

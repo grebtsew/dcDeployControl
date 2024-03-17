@@ -993,7 +993,7 @@ function closeLogsContainer() {
 }
 
 function openLog() {
-  openWebsite(`http://localhost/dcdc.log`);
+  openWebsite(`http://localhost/logs/dcdc.log`);
 }
 
 // Make the logs container draggable
