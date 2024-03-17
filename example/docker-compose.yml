@@ -22,7 +22,7 @@ services:
     restart: always
     cap_drop:
       - NET_RAW
-    user: "nginx"
+   
 
   owncontainer:
     container_name: owncontainer
@@ -49,7 +49,6 @@ services:
       - "ignore-ports=true"
     ports:
       - "8082:80/tcp"
-    user: "nginx"
     restart: always
 
   database1:

@@ -385,7 +385,9 @@ async def start_container(data: StartContainer):
         container_name = data.container
 
         if "services" in compose_data and container_name in compose_data["services"]:
-
+            
+            await handle_docker_start_conflict(container_name)
+           
             val = [
                 "docker-compose",
                 "-f",
@@ -418,6 +420,27 @@ def build_string_of_containerlist(dataList):
         containers.append(data.container)
     return containers
 
+async def handle_docker_start_conflict(container_name):
+    # Handle conflict
+    
+    check_command = f'docker ps -a --format "{{{{.Names}}}}" | grep "^{container_name}\$"'
+    logger.info(f"Running: {check_command}")
+    process = await asyncio.create_subprocess_shell(
+        check_command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    container_exists = bool(stdout)
+ 
+    # If the container exists, stop and remove it
+    if container_exists:
+        logger.info(f"Encountered conflict with container {container_name}. Stopping and removing old container and starting a new one.")
+        stop_remove_command = f'docker stop {container_name} && docker rm {container_name}'
+        logger.info(f"Running: {stop_remove_command}")
+        await asyncio.create_subprocess_shell(stop_remove_command,
+                                              stdout=asyncio.subprocess.PIPE,
+                                                stderr=asyncio.subprocess.PIPE)
 
 @app.post("/start-containers", response_model=bool)
 async def start_containers(dataList: List[StartContainer]):
@@ -426,6 +449,10 @@ async def start_containers(dataList: List[StartContainer]):
     """
     try:
         containers = build_string_of_containerlist(dataList)
+
+        for container in containers:
+            
+            await handle_docker_start_conflict(container)
 
         val = [
             "docker-compose",

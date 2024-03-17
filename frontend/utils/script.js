@@ -416,6 +416,7 @@ var network = new vis.Network(container, data, options);
 
 // global reference to all containers
 var containers = [];
+var external_containers = []; 
 
 // Perform parse on startup.
 parseDockerCompose(dockerComposePath);
@@ -514,6 +515,8 @@ function parseDockerCompose(data) {
     updateLegend(networkColors);
 
     showToast("Welcome!");
+
+    getRunningContainers();
   });
 }
 
@@ -769,19 +772,22 @@ function updateRunningNodes(_containers) {
   // Clear existing content in case of multiple calls
   checkboxesContainer.innerHTML = "";
 
-  // set not started status:
+  // Handle internal containers
   const anyNotIncontainers = containers.some(
     (obj1) =>
       !_containers.some((obj2) => obj2.container_name === obj1.container_name),
   );
-
+  
   if (anyNotIncontainers) {
+
+    // grab internal containers
     const notInList2 = containers.filter(
       (obj1) =>
         !_containers.some(
           (obj2) => obj2.container_name === obj1.container_name,
         ),
     );
+
     notInList2.forEach((c) => {
       const nodesArray = nodes.get(); // Get all nodes
 
@@ -789,6 +795,7 @@ function updateRunningNodes(_containers) {
         // Check if the node has the specified network color
         if (node.id === c.container_name) {
           // Set the hidden property based on the checkbox state
+         
 
           const checkboxLabel = document.getElementById(
             `checkbox-container-${c.container_name}`,
@@ -812,7 +819,7 @@ function updateRunningNodes(_containers) {
     });
   }
 
-  // Handle free running containers
+  // Handle external containers
 
   var running_unique = [];
   _containers.forEach((container) => {
@@ -822,6 +829,11 @@ function updateRunningNodes(_containers) {
     if (isNotInList) {
       running_unique.push(container);
 
+      if (!external_containers.some(item => item.container_name === container.container_name)) {
+        // If not present, add the object to the array
+        external_containers.push(container);
+      }
+      
       // Create list item for checkbox
       const card = document.createElement("div");
       card.classList.add("card-network");
@@ -877,6 +889,16 @@ function updateRunningNodes(_containers) {
   });
 
   addEdgesBasedOnNetworks(running_unique);
+
+  // remove no existing nodes
+  // Get objects from list1 that do not exist in list2
+  let objectsNotInexternal_containers = external_containers.filter(item1 => !running_unique.some(item2 => item1.container_name === item2.container_name));
+  objectsNotInexternal_containers.forEach((container) => {
+  external_containers = external_containers.filter(item => item !== container);
+  nodes.remove(container.container_name);
+  showToast( `${container.container_name} disconnected!`);
+  });
+  
 }
 
 function reshuffleGraph() {
@@ -910,9 +932,10 @@ function buildFlag() {
   }
 }
 
+
 function volumeFlag() {
-  // Toggle build flag value
-  const checkbox = document.getElementById("build");
+  // Toggle volume flag value
+  const checkbox = document.getElementById("volume");
   if (checkbox.checked) {
     vflag = "-v";
   } else {
@@ -960,7 +983,7 @@ function showLog() {
   logsContainer.style.display = "block";
 
   // Open a WebSocket connection with a specific website ID
-  const websiteId = "example-website"; // Replace with the actual website ID
+  const websiteId = id; // Replace with the actual website ID
   const websocket = new WebSocket(`ws://localhost:8000/ws/${websiteId}`); // Replace with your server address
 
   // Set up event handlers for the WebSocket
@@ -1211,11 +1234,7 @@ function clearClicked() {
 
   showCardLoader("red");
 
-  const data = {
-    docker_compose_path: dockerComposePath.file_path,
-    container: "",
-    flags: vflag,
-  };
+  const data = createStartContainer(dockerComposePath, "");
 
   showLoader("clear");
   genFetch(data, "clear")
@@ -1261,11 +1280,7 @@ function buildClicked() {
 
   showToast("Started building all containers...");
 
-  const data = {
-    docker_compose_path: dockerComposePath.file_path,
-    container: "",
-    flags: flag,
-  };
+  const data = createStartContainer(dockerComposePath, "");
 
   showLoader("build");
   genFetch(data, "build-all")
@@ -1301,11 +1316,7 @@ function getContainersWithCheckedBoxes(color) {
           );
           loader.hidden = false;
         }
-        tmp.push({
-          docker_compose_path: dockerComposePath.file_path,
-          container: container.container_name,
-          flags: flag,
-        });
+        tmp.push(createStartContainer(dockerComposePath,container ));
       }
     }
   });
@@ -1354,16 +1365,20 @@ function stopClicked() {
     });
 }
 
+function createStartContainer(dockerComposePath, container){
+  return {
+    docker_compose_path: dockerComposePath.file_path,
+    container: container ? container.container_name : "",
+    flags: flag,
+  };
+}
+
 async function stopContainer(containerToStop) {
   // Stop a container.
   showToast(`Stopping container: ${containerToStop.container_name}`);
   showCardLoader("red", containerToStop.container_name);
-  data = {
-    docker_compose_path: dockerComposePath.file_path,
-    container: containerToStop.container_name,
-    flags: flag,
-  };
-
+  data = createStartContainer(dockerComposePath,containerToStop );
+  
   genFetch(data, "stop-container").catch((error) => {
     hideLoader(containerToStop.container_name);
   });
@@ -1374,11 +1389,7 @@ async function startContainer(containerToStart) {
   showToast(`Starting container: ${containerToStart.container_name}`);
 
   showCardLoader("green", containerToStart.container_name);
-  data = {
-    docker_compose_path: dockerComposePath.file_path,
-    container: containerToStart.container_name,
-    flags: flag,
-  };
+  data =createStartContainer(dockerComposePath,containerToStart ); 
 
   genFetch(data, "start-container").catch((error) => {
     hideLoader(containerToStart.container_name);
