@@ -48,6 +48,11 @@ The main features include:
 - **Import and Export functions**: Docker save and load all images in system can be called. Only the volume folder can be used for import and export.
 - **Websocket logging link**: Show live logs from backend to better track system.
 
+# General tips
+
+These are some general tips for users of this software:
+* Use `.dockerignore` files in your repository in order to speed up build times and keep containers small.
+
 # CI/CD
 
 To ensure that the project maintains a high quality code, several CI/CD github actions has been added to the project. These must pass in order to get pull requests merged into main branch.
