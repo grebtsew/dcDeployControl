@@ -420,6 +420,7 @@ var network = new vis.Network(container, data, options);
 var containers = [];
 var running_containers = [];
 var external_containers = [];
+var internet_containers = [];
 
 // Perform parse on startup.
 parseDockerCompose(dockerComposePath);
@@ -1296,7 +1297,7 @@ function updateTable() {
     if (controllable === true || controllable === "true") {
       loader = document.createElement("div");
       loader.className = `loader`;
-      loader.id = `loader-${container.container_name}`;
+      loader.id = `loader-table-${container.container_name}`;
       loader.hidden = true;
 
       // Create start button icon
@@ -1349,9 +1350,13 @@ function updateTable() {
     var shouldBeChecked = false;
     running_containers.forEach((c) => {
       if (c.container_name === container.container_name) {
-        shouldBeChecked = c.networks_used.some(
-          (item) => item === "dcdc_internet_network",
-        );
+        shouldBeChecked = c.networks_used.includes( "dcdc_internet_network");
+        if (shouldBeChecked){
+          internet_containers.push(container.container_name)
+        } else {
+          internet_containers = internet_containers.filter(item => item !== container.container_name);
+        }
+        
       }
     });
 
@@ -1390,7 +1395,7 @@ function updateTable() {
     const portsColumn = document.createElement("td");
     portsColumn.innerHTML = container.exposed_ports
       .map((port) => {
-        const status = port === "host_mode" ? "orange" : "black";
+        const status = port === "host_mode" || internet_containers.includes(container.container_name) ? "orange" : "black";
         return `<span style="color: ${status};">${port}</span>`;
       })
       .join(", ");
@@ -1432,12 +1437,20 @@ function updateTable() {
 }
 
 function toggleClicked(containerName, toggleState) {
-  //console.log(`Toggle clicked for container '${containerName}' with state '${toggleState}'.`);
-  // cant add internet if it isnt running!
-  if (!running_containers.includes(containerName)) {
-    // toggleSwitch.checked = false;
-  } else {
+
+  var exist = false;
+  running_containers.forEach((c) => {
+    if (c.container_name === containerName) {
+      exist = true;
+    }
+  });
+
+  if (!exist){
+    return;
   }
+  
+  // cant add internet if it isnt running!
+
   if (toggleState === "positive") {
     genFetch(
       createStartContainer(
@@ -1445,11 +1458,15 @@ function toggleClicked(containerName, toggleState) {
         { container_name: containerName },
       ),
       "connect-to-internet",
-    ).then(
+    ).then(() => {
+
       showToast(
         `Container ${containerName} connected to internet network.`,
         "orange",
-      ),
+      );
+  
+      internet_containers.push(containerName);
+    }
     );
   } else {
     genFetch(
@@ -1458,11 +1475,13 @@ function toggleClicked(containerName, toggleState) {
         { container_name: containerName },
       ),
       "disconnect-from-internet",
-    ).then(
+    ).then( () => {
       showToast(
         `Container ${containerName} disconnected from internet network.`,
         "green",
-      ),
+      );
+      internet_containers = internet_containers.filter(item => item !== containerName);
+    }
     );
   }
 }
@@ -1537,6 +1556,10 @@ function showCardLoader(color, name = "all", containerlist = containers) {
           `loader-${container.container_name}`,
         );
         loader.hidden = false;
+        const loader2 = document.getElementById(
+          `loader-table-${container.container_name}`,
+        );
+        loader2.hidden = false;
       }
     }
   });
@@ -1645,7 +1668,7 @@ async function stopContainer(containerToStop) {
   showToast(`Stopping container: ${containerToStop.container_name}`);
   showCardLoader("red", containerToStop.container_name);
   data = createStartContainer(dockerComposePath, containerToStop);
-
+  
   genFetch(data, "stop-container").catch((error) => {
     hideLoader(containerToStop.container_name);
   });

@@ -5,7 +5,7 @@ version: "3"
 services:
   webapp1:
     container_name: webapp1
-    image: nginx
+    image: nginx:latest
     networks:
       - frontend
       - backend
@@ -38,7 +38,7 @@ services:
 
   webapp2:
     container_name: webapp2
-    image: nginx
+    image: nginx:latest
     networks:
       - frontend
       - backend
@@ -48,7 +48,7 @@ services:
       - "other=true"
       - "group=frontend"
     ports:
-      - "8082:80/tcp"
+      - "8082:80"
     restart: always
 
   database1:
@@ -138,6 +138,8 @@ services:
   cache:
     container_name: cache
     image: redis
+    ports:
+      - "6379:6379/tcp"
     networks:
       - backend
       - cache
@@ -161,4 +163,6 @@ networks:
     internal: true
   cache:
   all:
+    driver: bridge
     internal: true
+    

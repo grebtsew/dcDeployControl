@@ -100,7 +100,7 @@ internet_network_name = "dcdc_internet_network"
 
 async def create_internet_network():
     # Creates a network we can use as internet access network
-    command = ["docker", "network", "create", "--driver=bridge", internet_network_name]
+    command = ["docker", "network", "create", "--driver=bridge", "--attachable",  internet_network_name]
     await awaitTask(command)
 
 
@@ -131,6 +131,7 @@ networks = []
 @app.get("/networks")
 async def get_networks():
     try:
+       
         return networks
 
     except Exception as e:
@@ -220,17 +221,30 @@ def has_internet_access_in_compose_file(compose_file_path, network_name):
     for network_info in compose_data["networks"]:
 
         config = compose_data["networks"][network_info]
+        
+        if config is None:
+            name = network_info
+        elif "name" in config:
+            name = config["name"]
+        else:
+            name =network_info
 
-        if config is None and network_info == network_name:
+        print(network_info, name, config)
+
+        if config is None and name == network_name:
             return True  # Assuming bridge network
-        elif isinstance(network_info, dict) and config["name"] == network_name:
-            driver = config["driver"]
-            if driver == "bridge":
-                return True
-            elif driver and driver != "bridge" and config["internal"]:
-                return False
-            elif not driver:
-                return True  # Assuming default bridge driver
+        elif isinstance(config, dict) and name == network_name:
+            print(network_info, name, config)
+            if "internal" in config:
+                if config["internal"] == True:
+                    return False
+            print(network_info, name, config)
+            if "driver" in config:
+                if config["driver"] == "bridge":
+                    print(name)
+                    return True
+
+            return True  # Assuming default bridge driver
 
     logger.info(
         f"Network '{network_name}' not found or its configuration does not provide internet access."
@@ -348,9 +362,21 @@ async def connect_internet(data: StartContainer):
     try:
         command = [
             "docker",
+            "stop",
+            data.container,
+        ]
+        await awaitTask(command)
+        command = [
+            "docker",
             "network",
             "connect",
             internet_network_name,
+            data.container,
+        ]
+        await awaitTask(command)
+        command = [
+            "docker",
+            "start",
             data.container,
         ]
         await awaitTask(command)
@@ -368,9 +394,21 @@ async def disconnect_internet(data: StartContainer):
     try:
         command = [
             "docker",
+            "stop",
+            data.container,
+        ]
+        await awaitTask(command)
+        command = [
+            "docker",
             "network",
             "disconnect",
             internet_network_name,
+            data.container,
+        ]
+        await awaitTask(command)
+        command = [
+            "docker",
+            "start",
             data.container,
         ]
         await awaitTask(command)
