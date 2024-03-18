@@ -6,7 +6,7 @@ npx eslint ./frontend/utils
 
 # Format
 black .
-prettier -write .
+prettier --write .
 
 # Unit Tests
 pytest

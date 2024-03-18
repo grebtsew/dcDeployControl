@@ -15,8 +15,21 @@ from backend.server import app
 
 client = TestClient(app)
 
+def make_dir_if_not_exist(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        print(f"Directory '{directory}' created.")
+    else:
+        print(f"Directory '{directory}' already exists.")
+
+
+
 
 def test_parse_docker_compose():
+    # Example usage
+    directory_path = "./frontend/logs/"
+    make_dir_if_not_exist(directory_path)
+
     response = client.post(
         "/parse-docker-compose", json={"file_path": "./example/docker-compose.yml"}
     )
