@@ -603,17 +603,16 @@ function updateNodes(containers) {
   var presets = [];
   presets.push("None");
   presets.push("All");
-  
+
   // create empty presets
   containers.forEach((container) => {
-    container["presets"] = []
+    container["presets"] = [];
   });
 
   containers.forEach((container) => {
     // Create list item for checkbox
     //const listItem = document.createElement("li");
 
-    
     // Set default group
     var group = "";
     def_groups.forEach((c) => {
@@ -624,7 +623,7 @@ function updateNodes(containers) {
 
     var controllable = true;
     var ignore_ports = false;
-    
+
     // update ignore list
     container.labels_used.forEach((lab) => {
       const keyValuePairs = lab.split("=");
@@ -655,7 +654,6 @@ function updateNodes(containers) {
       }
     });
 
-
     const card = document.createElement("div");
     card.classList.add("card");
 
@@ -664,7 +662,6 @@ function updateNodes(containers) {
     checkbox.type = "checkbox";
     checkbox.id = `checkbox-container-${container.container_name}`;
 
-     
     if (container.presets.includes("default")) {
       checkbox.checked = true;
     } else {
@@ -772,7 +769,6 @@ function updateNodes(containers) {
     addNodeToGraph(container.container_name);
   });
 
-  
   generatePresetButtons(presets);
 
   addEdgesBasedOnNetworks(containers);
@@ -938,14 +934,14 @@ function updateRunningNodes(_containers) {
 }
 
 function generatePresetButtons(presets) {
-  const buttonContainer = document.getElementById('presets');
+  const buttonContainer = document.getElementById("presets");
   buttonContainer.innerHTML = "";
-  
+
   presets.forEach((preset) => {
-    const button = document.createElement('button');
+    const button = document.createElement("button");
     button.textContent = preset;
-    button.className = 'smlbtn';
-    button.setAttribute('onclick', `SelectPreset("${preset}")`);
+    button.className = "smlbtn";
+    button.setAttribute("onclick", `SelectPreset("${preset}")`);
     buttonContainer.appendChild(button);
   });
 }
@@ -1006,7 +1002,6 @@ var id = generateLogId();
 
 async function generateLogId() {
   genFetch(data, "id", "GET", true).then((res) => {
-
     return res.id;
   });
 
@@ -1350,14 +1345,16 @@ function updateTable() {
     var shouldBeChecked = false;
     running_containers.forEach((c) => {
       if (c.container_name === container.container_name) {
-        shouldBeChecked = c.networks_used.includes( "dcdc_internet_network"); 
+        shouldBeChecked = c.networks_used.includes("dcdc_internet_network");
       }
     });
 
-    if (shouldBeChecked){
-      internet_containers.push(container.container_name)
+    if (shouldBeChecked) {
+      internet_containers.push(container.container_name);
     } else {
-      internet_containers = internet_containers.filter(item => item !== container.container_name);
+      internet_containers = internet_containers.filter(
+        (item) => item !== container.container_name,
+      );
     }
     const row = document.createElement("tr");
 
@@ -1394,7 +1391,11 @@ function updateTable() {
     const portsColumn = document.createElement("td");
     portsColumn.innerHTML = container.exposed_ports
       .map((port) => {
-        const status = port === "host_mode" || internet_containers.includes(container.container_name) ? "orange" : "black";
+        const status =
+          port === "host_mode" ||
+          internet_containers.includes(container.container_name)
+            ? "orange"
+            : "black";
         return `<span style="color: ${status};">${port}</span>`;
       })
       .join(", ");
@@ -1436,7 +1437,6 @@ function updateTable() {
 }
 
 function toggleClicked(containerName, toggleState) {
-
   var exist = false;
   running_containers.forEach((c) => {
     if (c.container_name === containerName) {
@@ -1444,10 +1444,10 @@ function toggleClicked(containerName, toggleState) {
     }
   });
 
-  if (!exist){
+  if (!exist) {
     return;
   }
-  
+
   // cant add internet if it isnt running!
 
   if (toggleState === "positive") {
@@ -1458,15 +1458,13 @@ function toggleClicked(containerName, toggleState) {
       ),
       "connect-to-internet",
     ).then(() => {
-
       showToast(
         `Container ${containerName} connected to internet network.`,
         "orange",
       );
-  
+
       internet_containers.push(containerName);
-    }
-    );
+    });
   } else {
     genFetch(
       createStartContainer(
@@ -1474,14 +1472,15 @@ function toggleClicked(containerName, toggleState) {
         { container_name: containerName },
       ),
       "disconnect-from-internet",
-    ).then( () => {
+    ).then(() => {
       showToast(
         `Container ${containerName} disconnected from internet network.`,
         "green",
       );
-      internet_containers = internet_containers.filter(item => item !== containerName);
-    }
-    );
+      internet_containers = internet_containers.filter(
+        (item) => item !== containerName,
+      );
+    });
   }
 }
 
@@ -1667,7 +1666,7 @@ async function stopContainer(containerToStop) {
   showToast(`Stopping container: ${containerToStop.container_name}`);
   showCardLoader("red", containerToStop.container_name);
   data = createStartContainer(dockerComposePath, containerToStop);
-  
+
   genFetch(data, "stop-container").catch((error) => {
     hideLoader(containerToStop.container_name);
   });
@@ -1721,29 +1720,28 @@ function SelectPreset(arg) {
   );
 
   checkboxes.forEach((checkbox) => {
-    switch(arg.toLowerCase()) {
+    switch (arg.toLowerCase()) {
       case "none":
-          checkbox.checked = false;
-          break;
+        checkbox.checked = false;
+        break;
       case "all":
-          checkbox.checked = true;
-          break;
+        checkbox.checked = true;
+        break;
       default:
         const containerName = checkbox.id.replace("checkbox-container-", "");
-      checkbox.checked = false;
+        checkbox.checked = false;
         containers.forEach((container) => {
           if (container.container_name == containerName) {
-          container.presets.forEach((preset) => {
-              if(preset.toLowerCase() === arg.toLowerCase()){
+            container.presets.forEach((preset) => {
+              if (preset.toLowerCase() === arg.toLowerCase()) {
                 checkbox.checked = true;
-              } 
-          });
-    }
-  });
-          break;
+              }
+            });
+          }
+        });
+        break;
     }
 
-    
     checkbox.dispatchEvent(new Event("change"));
   });
 }

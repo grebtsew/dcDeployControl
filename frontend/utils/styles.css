@@ -93,9 +93,7 @@ summary {
 
 .card {
   min-width: 250px;
-
   align-items: center;
-
   padding: 7px;
   margin: 5px;
   border-radius: 10px;
@@ -254,8 +252,12 @@ table {
 th,
 td {
   border: 1px solid #504f4f;
-  text-align: left;
-  padding: 8px;
+  text-align: center;
+  line-height: 1;
+  padding: 0;
+  align-items: center;
+
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 th {
   background-color: #666666;

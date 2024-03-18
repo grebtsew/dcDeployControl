@@ -165,4 +165,3 @@ networks:
   all:
     driver: bridge
     internal: true
-    
