@@ -15,14 +15,13 @@ from backend.server import app
 
 client = TestClient(app)
 
+
 def make_dir_if_not_exist(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
         print(f"Directory '{directory}' created.")
     else:
         print(f"Directory '{directory}' already exists.")
-
-
 
 
 def test_parse_docker_compose():
