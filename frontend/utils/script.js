@@ -1350,16 +1350,15 @@ function updateTable() {
     var shouldBeChecked = false;
     running_containers.forEach((c) => {
       if (c.container_name === container.container_name) {
-        shouldBeChecked = c.networks_used.includes( "dcdc_internet_network");
-        if (shouldBeChecked){
-          internet_containers.push(container.container_name)
-        } else {
-          internet_containers = internet_containers.filter(item => item !== container.container_name);
-        }
-        
+        shouldBeChecked = c.networks_used.includes( "dcdc_internet_network"); 
       }
     });
 
+    if (shouldBeChecked){
+      internet_containers.push(container.container_name)
+    } else {
+      internet_containers = internet_containers.filter(item => item !== container.container_name);
+    }
     const row = document.createElement("tr");
 
     // Create the toggle switch column
