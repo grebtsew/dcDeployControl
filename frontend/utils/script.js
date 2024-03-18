@@ -335,6 +335,8 @@ const iconClasses = [
   "fa fa-maxcdn",
 ];
 
+var networks = [];
+
 // Sets path to docker-compose, dont change it here!
 const dockerComposePath = {
   file_path: "/docker/docker-compose.yml",
@@ -416,7 +418,8 @@ var network = new vis.Network(container, data, options);
 
 // global reference to all containers
 var containers = [];
-var external_containers = []; 
+var running_containers = [];
+var external_containers = [];
 
 // Perform parse on startup.
 parseDockerCompose(dockerComposePath);
@@ -517,6 +520,8 @@ function parseDockerCompose(data) {
     showToast("Welcome!");
 
     getRunningContainers();
+
+    getNetworks();
   });
 }
 
@@ -611,6 +616,7 @@ function updateNodes(containers) {
     });
 
     var controllable = true;
+    var ignore_ports = false;
     // update ignore list
     container.labels_used.forEach((lab) => {
       const keyValuePairs = lab.split("=");
@@ -629,6 +635,9 @@ function updateNodes(containers) {
       }
       if (field === "controllable") {
         controllable = value;
+      }
+      if (field === "ignore-ports") {
+        ignore_ports = value;
       }
 
       if (field === "group") {
@@ -695,16 +704,17 @@ function updateNodes(containers) {
       }
 
       // Create open website button
-      const openWebsiteButton = document.createElement("button");
-      openWebsiteButton.innerHTML = '<i class="fa fa-external-link"></i> ';
-      openWebsiteButton.className = "smlbtn";
-      openWebsiteButton.style.color = "white";
-      openWebsiteButton.addEventListener("click", () =>
-        openWebsite(`${protocol}://localhost:${p}/${container.path}`),
-      );
-      cardbuttoncontainer.appendChild(openWebsiteButton);
+      if (!ignore_ports) {
+        const openWebsiteButton = document.createElement("button");
+        openWebsiteButton.innerHTML = '<i class="fa fa-external-link"></i> ';
+        openWebsiteButton.className = "smlbtn";
+        openWebsiteButton.style.color = "white";
+        openWebsiteButton.addEventListener("click", () =>
+          openWebsite(`${protocol}://localhost:${p}/${container.path}`),
+        );
+        cardbuttoncontainer.appendChild(openWebsiteButton);
+      }
     }
-
     // Append elements to card container
     card.appendChild(checkbox);
     card.appendChild(label);
@@ -777,9 +787,8 @@ function updateRunningNodes(_containers) {
     (obj1) =>
       !_containers.some((obj2) => obj2.container_name === obj1.container_name),
   );
-  
-  if (anyNotIncontainers) {
 
+  if (anyNotIncontainers) {
     // grab internal containers
     const notInList2 = containers.filter(
       (obj1) =>
@@ -795,7 +804,6 @@ function updateRunningNodes(_containers) {
         // Check if the node has the specified network color
         if (node.id === c.container_name) {
           // Set the hidden property based on the checkbox state
-         
 
           const checkboxLabel = document.getElementById(
             `checkbox-container-${c.container_name}`,
@@ -829,11 +837,15 @@ function updateRunningNodes(_containers) {
     if (isNotInList) {
       running_unique.push(container);
 
-      if (!external_containers.some(item => item.container_name === container.container_name)) {
+      if (
+        !external_containers.some(
+          (item) => item.container_name === container.container_name,
+        )
+      ) {
         // If not present, add the object to the array
         external_containers.push(container);
       }
-      
+
       // Create list item for checkbox
       const card = document.createElement("div");
       card.classList.add("card-network");
@@ -892,13 +904,22 @@ function updateRunningNodes(_containers) {
 
   // remove no existing nodes
   // Get objects from list1 that do not exist in list2
-  let objectsNotInexternal_containers = external_containers.filter(item1 => !running_unique.some(item2 => item1.container_name === item2.container_name));
+  let objectsNotInexternal_containers = external_containers.filter(
+    (item1) =>
+      !running_unique.some(
+        (item2) => item1.container_name === item2.container_name,
+      ),
+  );
   objectsNotInexternal_containers.forEach((container) => {
-  external_containers = external_containers.filter(item => item !== container);
-  nodes.remove(container.container_name);
-  showToast( `${container.container_name} disconnected!`);
+    external_containers = external_containers.filter(
+      (item) => item !== container,
+    );
+    nodes.remove(container.container_name);
+    showToast(`${container.container_name} disconnected!`);
   });
-  
+
+  // Update access table:
+  updateTable();
 }
 
 function reshuffleGraph() {
@@ -931,7 +952,6 @@ function buildFlag() {
     flag = "";
   }
 }
-
 
 function volumeFlag() {
   // Toggle volume flag value
@@ -1216,7 +1236,216 @@ function toggleNetworkVisibility(network) {
   });
 }
 
-function internetClicked() {}
+function updateTable() {
+  const containerTableBody = document.getElementById("containerTableBody");
+  containerTableBody.innerHTML = "";
+
+  containers.forEach((container) => {
+    const networkStatuses = container.networks_used.map((network) => {
+      const status = networks.find((item) => item.name === network);
+      return status ? status.has_internet : false; // assuming false if not found
+    });
+
+    var controllable = true;
+    var ignore_ports = false;
+    // update ignore list
+    container.labels_used.forEach((lab) => {
+      const keyValuePairs = lab.split("=");
+      const field = keyValuePairs[0];
+      const value = keyValuePairs[1];
+
+      if (field === "controllable") {
+        controllable = value;
+      }
+      if (field === "ignore-ports") {
+        ignore_ports = value;
+      }
+    });
+
+    var startButton;
+    var stopButton;
+    var loader;
+    var openWebsiteButton;
+    if (controllable === true || controllable === "true") {
+      loader = document.createElement("div");
+      loader.className = `loader`;
+      loader.id = `loader-${container.container_name}`;
+      loader.hidden = true;
+
+      // Create start button icon
+      startButton = document.createElement("button");
+      startButton.innerHTML = '<i class="fa fa-play"></i>';
+      startButton.className = "smlbtn";
+      startButton.style.color = "green";
+      startButton.addEventListener("click", () => startContainer(container));
+
+      // Create stop button icon
+      stopButton = document.createElement("button");
+      stopButton.innerHTML = '<i class="fa fa-stop"></i> ';
+      stopButton.className = "smlbtn";
+      stopButton.style.color = "red";
+      stopButton.addEventListener("click", () => stopContainer(container));
+    }
+    if (container.exposed_ports.length > 0) {
+      const port = container.exposed_ports[0].split(":");
+      var p = "";
+      if (port.length == 3) {
+        p = port[1];
+      } else {
+        p = port[0];
+      }
+
+      protocol = "http";
+      if (container.protocol !== "") {
+        protocol = container.protocol;
+      }
+
+      // Create open website button
+      if (!ignore_ports) {
+        openWebsiteButton = document.createElement("button");
+        openWebsiteButton.innerHTML = '<i class="fa fa-external-link"></i> ';
+        openWebsiteButton.className = "smlbtn";
+        openWebsiteButton.style.color = "white";
+        openWebsiteButton.addEventListener("click", () =>
+          openWebsite(`${protocol}://localhost:${p}/${container.path}`),
+        );
+      }
+    }
+
+    const otherElement = document.getElementById(
+      `checkbox-container-${container.container_name}`,
+    );
+    const label = otherElement.nextElementSibling;
+
+    const color = label.style.color;
+
+    var shouldBeChecked = false;
+    running_containers.forEach((c) => {
+      if (c.container_name === container.container_name) {
+        shouldBeChecked = c.networks_used.some(
+          (item) => item === "dcdc_internet_network",
+        );
+      }
+    });
+
+    const row = document.createElement("tr");
+
+    // Create the toggle switch column
+    const toggleSwitchColumn = document.createElement("td");
+    toggleSwitchColumn.innerHTML = `
+  <label class="toggle-switch">
+    <input type="checkbox" ${shouldBeChecked ? "checked" : ""}>
+    <span class="slider"></span>
+  </label>
+`;
+    row.appendChild(toggleSwitchColumn);
+
+    // Create the container name column
+    const nameColumn = document.createElement("td");
+    nameColumn.style.backgroundColor = color;
+    nameColumn.textContent = container.container_name;
+    row.appendChild(nameColumn);
+
+    // Create the buttons column
+    const buttonsColumn = document.createElement("td");
+    if (controllable === true || controllable === "true") {
+      buttonsColumn.appendChild(loader);
+      buttonsColumn.appendChild(startButton);
+      buttonsColumn.appendChild(stopButton);
+    }
+    if (!ignore_ports && container.exposed_ports.length > 0) {
+      buttonsColumn.appendChild(openWebsiteButton);
+    }
+
+    row.appendChild(buttonsColumn);
+
+    // Create the exposed ports column
+    const portsColumn = document.createElement("td");
+    portsColumn.innerHTML = container.exposed_ports
+      .map((port) => {
+        const status = port === "host_mode" ? "orange" : "black";
+        return `<span style="color: ${status};">${port}</span>`;
+      })
+      .join(", ");
+    row.appendChild(portsColumn);
+
+    // Create the protocol column
+    const protocolColumn = document.createElement("td");
+    protocolColumn.textContent = container.protocol;
+    row.appendChild(protocolColumn);
+
+    // Create the networks used column
+    const networksColumn = document.createElement("td");
+    networksColumn.innerHTML = container.networks_used
+      .map((network, index) => {
+        const status = networkStatuses[index] ? "orange" : "black";
+        return `<span style="color: ${status};">${network}</span>`;
+      })
+      .join(", ");
+    row.appendChild(networksColumn);
+
+    // Append the row to the table body
+    containerTableBody.appendChild(row);
+  });
+
+  // Select all toggle switch inputs
+  const toggleSwitches = document.querySelectorAll(".toggle-switch input");
+
+  // Iterate over each toggle switch input
+  toggleSwitches.forEach((toggleSwitch, index) => {
+    toggleSwitch.addEventListener("click", function () {
+      // Get the corresponding container's container_name
+      const containerName = containers[index].container_name;
+      const toggleState = toggleSwitch.checked ? "positive" : "negative";
+
+      // Call your function with the container_name and toggleState when the toggle switch is clicked
+      toggleClicked(containerName, toggleState);
+    });
+  });
+}
+
+function toggleClicked(containerName, toggleState) {
+  //console.log(`Toggle clicked for container '${containerName}' with state '${toggleState}'.`);
+  // cant add internet if it isnt running!
+  if (!running_containers.includes(containerName)) {
+    // toggleSwitch.checked = false;
+  } else {
+  }
+  if (toggleState === "positive") {
+    genFetch(
+      createStartContainer(
+        { file_path: "" },
+        { container_name: containerName },
+      ),
+      "connect-to-internet",
+    ).then(
+      showToast(
+        `Container ${containerName} connected to internet network.`,
+        "orange",
+      ),
+    );
+  } else {
+    genFetch(
+      createStartContainer(
+        { file_path: "" },
+        { container_name: containerName },
+      ),
+      "disconnect-from-internet",
+    ).then(
+      showToast(
+        `Container ${containerName} disconnected from internet network.`,
+        "green",
+      ),
+    );
+  }
+}
+
+function internetClicked() {
+  tableContainer.classList.toggle("visible");
+  tableContainer.classList.toggle("hidden");
+
+  updateTable();
+}
 
 function shutdown() {
   showToast("Shutting down all...");
@@ -1226,6 +1455,17 @@ function shutdown() {
   genFetch(NaN, "shutdown", "GET").then(
     alert("dcDeployControl will be terminated in a few seconds."),
   );
+}
+
+function getNetworks() {
+  showToast("Collecting Network information...");
+
+  genFetch(NaN, "networks", "GET").then((response) => {
+    //console.log(response);
+
+    networks = response;
+    showToast("Network information collected successfully!", "green");
+  });
 }
 
 function clearClicked() {
@@ -1316,7 +1556,7 @@ function getContainersWithCheckedBoxes(color) {
           );
           loader.hidden = false;
         }
-        tmp.push(createStartContainer(dockerComposePath,container ));
+        tmp.push(createStartContainer(dockerComposePath, container));
       }
     }
   });
@@ -1365,7 +1605,7 @@ function stopClicked() {
     });
 }
 
-function createStartContainer(dockerComposePath, container){
+function createStartContainer(dockerComposePath, container) {
   return {
     docker_compose_path: dockerComposePath.file_path,
     container: container ? container.container_name : "",
@@ -1377,8 +1617,8 @@ async function stopContainer(containerToStop) {
   // Stop a container.
   showToast(`Stopping container: ${containerToStop.container_name}`);
   showCardLoader("red", containerToStop.container_name);
-  data = createStartContainer(dockerComposePath,containerToStop );
-  
+  data = createStartContainer(dockerComposePath, containerToStop);
+
   genFetch(data, "stop-container").catch((error) => {
     hideLoader(containerToStop.container_name);
   });
@@ -1389,7 +1629,7 @@ async function startContainer(containerToStart) {
   showToast(`Starting container: ${containerToStart.container_name}`);
 
   showCardLoader("green", containerToStart.container_name);
-  data =createStartContainer(dockerComposePath,containerToStart ); 
+  data = createStartContainer(dockerComposePath, containerToStart);
 
   genFetch(data, "start-container").catch((error) => {
     hideLoader(containerToStart.container_name);
@@ -1400,6 +1640,7 @@ async function getRunningContainers() {
   // Gets all running containers every 10 second and send updates to updateRunningNodes.
   genFetch(NaN, "get-running-containers-with-networks", "GET").then(
     (result) => {
+      running_containers = result;
       updateRunningNodes(result);
     },
   );

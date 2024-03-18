@@ -30,6 +30,31 @@
 
       <input type="file" id="fileInput" style="display: none" />
 
+      <div id="tableContainer" class="table-container hidden">
+        <div class="table-header">
+          <div style="float: left">Container Access Table</div>
+
+          <span class="close-btn" onclick="internetClicked()">&times;</span>
+        </div>
+        <div id="tableContent" class="table-content-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Internet</th>
+                <th>Name</th>
+                <th>Controls</th>
+                <th>Ports</th>
+                <th>Protocols</th>
+                <th>Networks</th>
+              </tr>
+            </thead>
+            <tbody id="containerTableBody">
+              <!-- Populate rows dynamically using JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="control-panel">
         <div id="content">
           <h1>Tools</h1>
@@ -76,7 +101,9 @@
           </div>
           <div class="card-network">
             <input id="volume" type="checkbox" onclick="volumeFlag()" />
-            <label for="volume">Clear Volumes <i class="fas fa-hdd"></i> </label>
+            <label for="volume"
+              >Clear Volumes <i class="fas fa-hdd"></i>
+            </label>
           </div>
 
           <div class="card-network">
@@ -203,8 +230,57 @@
 
       // Make the log container both draggable and resizable
       const logContainer = document.getElementById("logsContainer");
-
       makeResizable(logContainer);
+
+      const tableContainer = document.getElementById("tableContainer");
+      makeResizable(tableContainer);
+
+      //const tableContent = document.getElementById("tableContent");
+      dragElement(tableContainer);
+      function dragElement(elmnt) {
+        let pos1 = 0,
+          pos2 = 0,
+          pos3 = 0,
+          pos4 = 0;
+
+        if (document.querySelector(".table-header")) {
+          // if present, the header is where you move the DIV from:
+          document.querySelector(".table-header").onmousedown = dragMouseDown;
+        } else {
+          // otherwise, move the DIV from anywhere inside the DIV:
+          elmnt.onmousedown = dragMouseDown;
+        }
+
+        function dragMouseDown(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // get the mouse cursor position at startup:
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          document.onmouseup = closeDragElement;
+          // call a function whenever the cursor moves:
+          document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // calculate the new cursor position:
+          pos1 = pos3 - e.clientX;
+          pos2 = pos4 - e.clientY;
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          // set the element's new position:
+          elmnt.style.top = elmnt.offsetTop - pos2 + "px";
+          elmnt.style.left = elmnt.offsetLeft - pos1 + "px";
+        }
+
+        function closeDragElement() {
+          // stop moving when mouse button is released:
+          document.onmouseup = null;
+          document.onmousemove = null;
+        }
+      }
     </script>
   </body>
 </html>

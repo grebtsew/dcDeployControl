@@ -22,7 +22,6 @@ services:
     restart: always
     cap_drop:
       - NET_RAW
-   
 
   owncontainer:
     container_name: owncontainer
@@ -46,7 +45,6 @@ services:
       - all
     labels:
       - "group=frontend"
-      - "ignore-ports=true"
     ports:
       - "8082:80/tcp"
     restart: always
@@ -144,6 +142,8 @@ services:
 
 networks:
   frontend:
+    name: frontend
+    driver: bridge
     internal: true
   backend:
     internal: true
@@ -156,6 +156,5 @@ networks:
   logging:
     internal: true
   cache:
-    internal: true
   all:
     internal: true

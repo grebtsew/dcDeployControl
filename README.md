@@ -51,7 +51,8 @@ The main features include:
 # General tips
 
 These are some general tips for users of this software:
-* Use `.dockerignore` files in your repository in order to speed up build times and keep containers small.
+
+- Use `.dockerignore` files in your repository in order to speed up build times and keep containers small.
 
 # CI/CD
 

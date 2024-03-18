@@ -69,6 +69,11 @@ class DockerComposeInfo(BaseModel):
     file_path: str
 
 
+class Networks(BaseModel):
+    name: str
+    has_internet: bool
+
+
 class StartContainer(BaseModel):
     docker_compose_path: str
     container: str
@@ -89,6 +94,14 @@ class ContainerInfo(BaseModel):
 
 
 connected_websockets = set()
+
+internet_network_name = "dcdc_internet_network"
+
+
+async def create_internet_network():
+    # Creates a network we can use as internet access network
+    command = ["docker", "network", "create", "--driver=bridge", internet_network_name]
+    await awaitTask(command)
 
 
 class WebSocketLogHandler(logging.Handler):
@@ -112,6 +125,18 @@ logging.getLogger().addHandler(WebSocketLogHandler())
 # In-memory storage for logs per website
 logs_per_website = {}
 
+networks = []
+
+
+@app.get("/networks")
+async def get_networks():
+    try:
+        return networks
+
+    except Exception as e:
+        logger.error(f"Networks => An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
 
 def shutdown():
     command = ["docker", "stop", "dcDeployControl"]
@@ -126,12 +151,10 @@ def shutdown():
 
 
 @app.get("/shutdown")
-async def generate_log_id():
+async def shutdown_api():
     try:
         stop_thread = threading.Thread(target=shutdown)
         stop_thread.start()
-
-        # await awaitTask(command)
         return True
 
     except Exception as e:
@@ -173,7 +196,7 @@ def isJson(label):
         return False
 
 
-def handleLabelExceptions(label, networks_used, path, protocol, exposed_ports):
+def handleLabelExceptions(label, networks_used, path, protocol):
     tmp = label.split("=")
     if len(tmp) == 2:
         [key, value] = tmp
@@ -183,9 +206,36 @@ def handleLabelExceptions(label, networks_used, path, protocol, exposed_ports):
             path = value
         if key == "protocol":
             protocol = value
-        if key == "ignore-ports":
-            exposed_ports = []
-    return networks_used, path, protocol, exposed_ports
+    return networks_used, path, protocol
+
+
+def has_internet_access_in_compose_file(compose_file_path, network_name):
+    with open(compose_file_path, "r") as file:
+        compose_data = yaml.safe_load(file)
+    # Check if the network is defined in the Docker Compose file
+    if "networks" not in compose_data:
+        logger.error("Error: No networks defined in the Docker Compose file.")
+        return False
+    # Iterate over the networks in the Docker Compose file
+    for network_info in compose_data["networks"]:
+
+        config = compose_data["networks"][network_info]
+
+        if config is None and network_info == network_name:
+            return True  # Assuming bridge network
+        elif isinstance(network_info, dict) and config["name"] == network_name:
+            driver = config["driver"]
+            if driver == "bridge":
+                return True
+            elif driver and driver != "bridge" and config["internal"]:
+                return False
+            elif not driver:
+                return True  # Assuming default bridge driver
+
+    logger.info(
+        f"Network '{network_name}' not found or its configuration does not provide internet access."
+    )
+    return False
 
 
 @app.post("/parse-docker-compose", response_model=List[ContainerInfo])
@@ -206,9 +256,17 @@ async def parse_docker_compose(data: DockerComposeInfo):
                 container_name = service_name
                 networks_used = service_config.get("networks", [])
                 labels_used = service_config.get("labels", [])
+                network_mode = service_config.get("network_mode")
                 protocol = ""
                 path = ""
                 exposed_ports = service_config.get("ports", [])
+
+                # Detect and handle hostmode
+                if network_mode is not None:
+
+                    if exposed_ports == []:
+                        labels_used.append("ignore-ports=true")
+                    exposed_ports.append("host_mode")
 
                 # Add manuel networks
                 for label in labels_used:
@@ -223,16 +281,23 @@ async def parse_docker_compose(data: DockerComposeInfo):
 
                         # Handle exceptions
                         for label in labels_used:
-                            networks_used, path, protocol, exposed_ports = (
-                                handleLabelExceptions(
-                                    label, networks_used, path, protocol, exposed_ports
-                                )
+                            networks_used, path, protocol = handleLabelExceptions(
+                                label, networks_used, path, protocol
                             )
                     else:
                         # Handle exceptions
-                        networks_used, path, protocol, exposed_ports = (
-                            handleLabelExceptions(
-                                label, networks_used, path, protocol, exposed_ports
+                        networks_used, path, protocol = handleLabelExceptions(
+                            label, networks_used, path, protocol
+                        )
+
+                for network in networks_used:
+                    if network not in [n.name for n in networks]:
+                        networks.append(
+                            Networks(
+                                name=network,
+                                has_internet=has_internet_access_in_compose_file(
+                                    data.file_path, network
+                                ),
                             )
                         )
 
@@ -275,13 +340,19 @@ async def awaitTask(command):
 
 
 @app.post("/connect-to-internet", response_model=bool)
-async def export_images(data: DockerComposeInfo):
+async def connect_internet(data: StartContainer):
     """
     Connect container to a network with internet interface access.
     """
+    await create_internet_network()
     try:
-        # TODO: add container to a network with internet access
-        command = ["docker", "networks", "connect"]
+        command = [
+            "docker",
+            "network",
+            "connect",
+            internet_network_name,
+            data.container,
+        ]
         await awaitTask(command)
         return True
     except Exception as e:
@@ -289,29 +360,19 @@ async def export_images(data: DockerComposeInfo):
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
-@app.post("/reset-network", response_model=bool)
-async def export_images(data: DockerComposeInfo):
+@app.post("/disconnect-from-internet", response_model=bool)
+async def disconnect_internet(data: StartContainer):
     """
     Disconnect container from all networks with internet interface access.
     """
     try:
-        # TODO: remove container from internet access network
-        command = ["docker", "networks", "disconnect"]
-        await awaitTask(command)
-        return True
-    except Exception as e:
-        logger.error(f"Reset to default network => An error occurred: {e}")
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
-
-
-@app.post("/disconnect-network", response_model=bool)
-async def export_images(data: DockerComposeInfo):
-    """
-    Disconnect container from all networks with internet interface access.
-    """
-    try:
-        # TODO: remove container from internet access network
-        command = ["docker", "networks", "disconnect"]
+        command = [
+            "docker",
+            "network",
+            "disconnect",
+            internet_network_name,
+            data.container,
+        ]
         await awaitTask(command)
         return True
     except Exception as e:
@@ -385,9 +446,9 @@ async def start_container(data: StartContainer):
         container_name = data.container
 
         if "services" in compose_data and container_name in compose_data["services"]:
-            
+
             await handle_docker_start_conflict(container_name)
-           
+
             val = [
                 "docker-compose",
                 "-f",
@@ -420,27 +481,35 @@ def build_string_of_containerlist(dataList):
         containers.append(data.container)
     return containers
 
+
 async def handle_docker_start_conflict(container_name):
     # Handle conflict
-    
-    check_command = f'docker ps -a --format "{{{{.Names}}}}" | grep "^{container_name}\$"'
+
+    check_command = (
+        f'docker ps -a --format "{{{{.Names}}}}" | grep "^{container_name}\$"'
+    )
     logger.info(f"Running: {check_command}")
     process = await asyncio.create_subprocess_shell(
-        check_command,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
+        check_command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
     container_exists = bool(stdout)
- 
+
     # If the container exists, stop and remove it
     if container_exists:
-        logger.info(f"Encountered conflict with container {container_name}. Stopping and removing old container and starting a new one.")
-        stop_remove_command = f'docker stop {container_name} && docker rm {container_name}'
+        logger.info(
+            f"Encountered conflict with container {container_name}. Stopping and removing old container and starting a new one."
+        )
+        stop_remove_command = (
+            f"docker stop {container_name} && docker rm {container_name}"
+        )
         logger.info(f"Running: {stop_remove_command}")
-        await asyncio.create_subprocess_shell(stop_remove_command,
-                                              stdout=asyncio.subprocess.PIPE,
-                                                stderr=asyncio.subprocess.PIPE)
+        await asyncio.create_subprocess_shell(
+            stop_remove_command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
 
 @app.post("/start-containers", response_model=bool)
 async def start_containers(dataList: List[StartContainer]):
@@ -451,7 +520,7 @@ async def start_containers(dataList: List[StartContainer]):
         containers = build_string_of_containerlist(dataList)
 
         for container in containers:
-            
+
             await handle_docker_start_conflict(container)
 
         val = [
