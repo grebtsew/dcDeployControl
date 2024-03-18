@@ -12,7 +12,7 @@ services:
       - all
     labels:
       - "global-ignore=all"
-      - "global-use-defaults=true"
+      - "add-preset=default"
       - "group=frontend"
       - "default=true"
       - "protocol=http"
@@ -44,6 +44,8 @@ services:
       - backend
       - all
     labels:
+      - "add-preset=other"
+      - "other=true"
       - "group=frontend"
     ports:
       - "8082:80/tcp"
@@ -110,6 +112,7 @@ services:
     image: prom/prometheus
     labels:
       - "group=monitoring"
+      - "other=true"
       - '[{"container": "custom","networks": ["frontend"], "labels": ["default=true","controllable=false"], "ports": ["9090:9090"]}]'
     networks:
       - frontend
@@ -126,6 +129,7 @@ services:
       - "network=all"
       - "network=backend"
       - "network=logging"
+      - "other=true"
     container_name: logging
     image: fluentd
     network_mode: "host"

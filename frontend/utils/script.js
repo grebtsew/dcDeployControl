@@ -599,14 +599,20 @@ function updateNodes(containers) {
 
   const def_groups = findSmallestNetwork(containers);
 
-  var use_defaults = "false";
+  var presets = [];
+  presets.push("None");
+  presets.push("All");
+  
+  // create empty presets
+  containers.forEach((container) => {
+    container["presets"] = []
+  });
 
   containers.forEach((container) => {
     // Create list item for checkbox
-    const listItem = document.createElement("li");
+    //const listItem = document.createElement("li");
 
-    var isDefault = "false";
-
+    
     // Set default group
     var group = "";
     def_groups.forEach((c) => {
@@ -617,6 +623,7 @@ function updateNodes(containers) {
 
     var controllable = true;
     var ignore_ports = false;
+    
     // update ignore list
     container.labels_used.forEach((lab) => {
       const keyValuePairs = lab.split("=");
@@ -627,11 +634,10 @@ function updateNodes(containers) {
           ignoreList.push(value);
         }
       }
-      if (field == "global-use-defaults") {
-        use_defaults = value;
-      }
-      if (field === "default") {
-        isDefault = value;
+      if (field == "add-preset") {
+        if (!presets.includes(value)) {
+          presets.push(value);
+        }
       }
       if (field === "controllable") {
         controllable = value;
@@ -643,7 +649,11 @@ function updateNodes(containers) {
       if (field === "group") {
         group = value;
       }
+      if (presets.includes(field)) {
+        container["presets"].push(field);
+      }
     });
+
 
     const card = document.createElement("div");
     card.classList.add("card");
@@ -653,10 +663,11 @@ function updateNodes(containers) {
     checkbox.type = "checkbox";
     checkbox.id = `checkbox-container-${container.container_name}`;
 
-    if (use_defaults === "true") {
-      checkbox.checked = isDefault === "true";
-    } else {
+     
+    if (container.presets.includes("default")) {
       checkbox.checked = true;
+    } else {
+      checkbox.checked = false;
     }
 
     checkbox.addEventListener("change", () =>
@@ -759,6 +770,9 @@ function updateNodes(containers) {
     // Create node in the graph
     addNodeToGraph(container.container_name);
   });
+
+  
+  generatePresetButtons(presets);
 
   addEdgesBasedOnNetworks(containers);
 
@@ -922,6 +936,19 @@ function updateRunningNodes(_containers) {
   updateTable();
 }
 
+function generatePresetButtons(presets) {
+  const buttonContainer = document.getElementById('presets');
+  buttonContainer.innerHTML = "";
+  
+  presets.forEach((preset) => {
+    const button = document.createElement('button');
+    button.textContent = preset;
+    button.className = 'smlbtn';
+    button.setAttribute('onclick', `SelectPreset("${preset}")`);
+    buttonContainer.appendChild(button);
+  });
+}
+
 function reshuffleGraph() {
   // Reshuffle and randomize node positions in network graph.
 
@@ -978,7 +1005,7 @@ var id = generateLogId();
 
 async function generateLogId() {
   genFetch(data, "id", "GET", true).then((res) => {
-    //console.log(res);
+
     return res.id;
   });
 
@@ -1665,38 +1692,36 @@ function showToast(message, color = "blue") {
   }).showToast();
 }
 
-function Select(arg) {
-  // Function that checks checkboxes when pressing None/All/Default buttons
-
+function SelectPreset(arg) {
+  // Function that checks checkboxes when pressing None/All/Default and so on buttons
   const checkboxes = document.querySelectorAll(
     'input[type="checkbox"][id^="checkbox-container-"]',
   );
 
   checkboxes.forEach((checkbox) => {
-    if (arg === None) {
+    switch(arg.toLowerCase()) {
+      case "none":
+          checkbox.checked = false;
+          break;
+      case "all":
+          checkbox.checked = true;
+          break;
+      default:
+        const containerName = checkbox.id.replace("checkbox-container-", "");
       checkbox.checked = false;
-    }
-
-    if (arg === "all") {
-      checkbox.checked = true;
-    }
-    if (arg == "default") {
-      const containerName = checkbox.id.replace("checkbox-container-", "");
-      checkbox.checked = false;
-      containers.forEach((container) => {
-        if (container.container_name == containerName) {
-          container.labels_used.forEach((lab) => {
-            const keyValuePairs = lab.split("=");
-            const field = keyValuePairs[0];
-            const value = keyValuePairs[1];
-
-            if (field === "default") {
-              checkbox.checked = true;
-            }
+        containers.forEach((container) => {
+          if (container.container_name == containerName) {
+          container.presets.forEach((preset) => {
+              if(preset.toLowerCase() === arg.toLowerCase()){
+                checkbox.checked = true;
+              } 
           });
-        }
-      });
     }
+  });
+          break;
+    }
+
+    
     checkbox.dispatchEvent(new Event("change"));
   });
 }
