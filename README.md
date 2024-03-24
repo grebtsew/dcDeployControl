@@ -22,14 +22,16 @@ Checkout the demo gif below!
 # Manual labels in Docker-compose
 
 A label system has been added that can help control the visualizations and other structure of the application. Below the added docker-compose labels that will be parsed on software execution are described.
+**NOTE**: These labels must be in a list .yml format!
 
 ```yml
 labels:
-  - "global-ignore=all" # Global ignore specific network in the visualizations.
-  - "global-use-defaults=true" # Global turn off or on the default group option.
-  - "group=frontend" # For this container set group, this will override network group detection.
-  - "network=frontend" # For this container set network, this will override network group detection.
-  - "default=true" # For this contianer set to default, meaning this container will be included in the default group.
+  - "global-ignore=<network-name>" # Global ignore specific network in the visualizations.
+  - "global-use-defaults=<bool>" # Global turn off or on the default group option.
+  - "group=<group-name>" # For this container set group, this will override network group detection.
+  - "network=<network-name>" # For this container set network, this will override network group detection.
+  - "add-preset=<preset-name>" # Create preset, like default, which will be selected on button click.
+  - "<preset-name>=true" # Specify which presets to use for specific container.
   - "protocol=https" # For this container set weblink protocol.
   - "path=index.html" # For this contaienr set weblink path.
   - '[{"container": "custom","networks": ["frontend"], "labels": ["default=true","controllable=false"], "ports": ["9090:9090"]}]' # Add custom container
@@ -47,12 +49,15 @@ The main features include:
 - **Build and Clear function** : Build and clear functions has been added that runs the `build` and `down` command to clear up any issues with old running containers.
 - **Import and Export functions**: Docker save and load all images in system can be called. Only the volume folder can be used for import and export.
 - **Websocket logging link**: Show live logs from backend to better track system.
+- **Network Access Table**: A control system for giving containers temporary internet access.
 
 # General tips
 
 These are some general tips for users of this software:
 
 - Use `.dockerignore` files in your repository in order to speed up build times and keep containers small.
+- Volumes in the target docker-compose file should be changed to absolute path of working folder for it to work correctly.
+- With the new internet access feature, i recommend setting all networks to internal in order to better keep containers from unwanted internet access.
 
 # CI/CD
 
@@ -60,27 +65,27 @@ To ensure that the project maintains a high quality code, several CI/CD github a
 
 The workflows include:
 
-| Test Description             | Badge                                                                                                                                                                                                     |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build Docker Container       | [![Build Docker Container](https://github.com/grebtsew/dcDeployControl/actions/workflows/build_docker.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/build_docker.yml)     |
-| Check Javascript Format      | [![Check Javascript Format](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_format.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_format.yml)          |
-| Check Python Format          | [![Check Python Format](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_format.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_format.yml)              |
-| Run Pytest                   | [![Run Pytest](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_unit_test.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_unit_test.yml)                 |
-| ESLint Check                 | [![ESLint Check](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_lint.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_lint.yml)                         |
-| JavaScript Test and Coverage | [![JavaScript Test and Coverage](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_coverage.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_coverage.yml) |
-| JavaScript Tests             | [![JavaScript Tests](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_unit_test.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_unit_test.yml)           |
-| Pylint Check                 | [![Pylint Check](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_lint.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_lint.yml)                         |
-| Python Test and Coverage     | [![Python Test and Coverage](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_coverage.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_coverage.yml)     |
+| Test Status                                                                                                                                                                                               | Info                                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [![Build Docker Container](https://github.com/grebtsew/dcDeployControl/actions/workflows/build_docker.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/build_docker.yml)     | Integration test that container atleast can build.      |
+| [![Check Javascript Format](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_format.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_format.yml)          | Prettier format check of javascript and markdown code.  |
+| [![Check Python Format](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_format.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_format.yml)              | Black format check of python code.                      |
+| [![Run Pytest](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_unit_test.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_unit_test.yml)                 | Unit testing using pytest for backend python code.      |
+| [![ESLint Check](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_lint.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_lint.yml)                         | EsLint test for code quality in javascript code.        |
+| [![JavaScript Test and Coverage](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_coverage.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_coverage.yml) | Test coverage and quality analysis for javascript code. |
+| [![JavaScript Tests](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_unit_test.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/js_unit_test.yml)           | Unit testing for javascript code.                       |
+| [![Pylint Check](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_lint.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_lint.yml)                         | PyLint test for code quality in python code.            |
+| [![Python Test and Coverage](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_coverage.yml/badge.svg)](https://github.com/grebtsew/dcDeployControl/actions/workflows/py_coverage.yml)     | Get code quality and test coverage in python code.      |
 
-# Unit Testing
+# Run tests locally
 
-To run tests, install `pip install pytest` and run:
+To run tests run:
 
 ```
-pytest
+./__tests__/run_locally.sh
 ```
 
-**Note**: There is currently no unit testing for frontend.
+**Note**: This will create several cache folders with test results in your folders.
 
 # Libraries
 
