@@ -10,6 +10,7 @@ services:
       - frontend
       - backend
       - all
+      - dcdc_internet_network
     labels:
       - "global-ignore=all"
       - "add-preset=default"
@@ -165,3 +166,7 @@ networks:
   all:
     driver: bridge
     internal: true
+  dcdc_internet_network:
+    name: dcdc_internet_network
+    driver: bridge
+    internal: false

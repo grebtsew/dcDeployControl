@@ -58,6 +58,8 @@ These are some general tips for users of this software:
 - Use `.dockerignore` files in your repository in order to speed up build times and keep containers small.
 - Volumes in the target docker-compose file should be changed to absolute path of working folder for it to work correctly.
 - With the new internet access feature, i recommend setting all networks to internal in order to better keep containers from unwanted internet access.
+- To set default internet access use the `dcdc_internet_network` network.
+- Generally take a look inside `./example/docker-compose.yml` for examples.
 
 # CI/CD
 
