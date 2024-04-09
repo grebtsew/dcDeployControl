@@ -1387,6 +1387,40 @@ function updateTable() {
 
     row.appendChild(buttonsColumn);
 
+    //create scale column
+    var scale_up_button;
+    var scale_down_button;
+    var scale_number;
+
+    scale_up_button = document.createElement("button");
+    scale_up_button.innerHTML = '<i class="fa fa-plus"></i>';
+    scale_up_button.className = "smlbtn";
+    scale_up_button.style.color = "blue";
+    scale_up_button.addEventListener("click", () =>
+      scaleContainer(container, "add"),
+    );
+
+    scale_down_button = document.createElement("button");
+    scale_down_button.innerHTML = '<i class="fa fa-minus"></i>';
+    scale_down_button.className = "smlbtn";
+    scale_down_button.style.color = "yellow";
+    scale_down_button.addEventListener("click", () =>
+      scaleContainer(container, "remove"),
+    );
+
+    scale_number = document.createElement("button");
+    scale_number.innerHTML = getAmountOfScaledContainers(container);
+    scale_number.className = "smlbtn";
+    scale_number.style.color = "white";
+    scale_number.id = `scale_number_${container.containerName}`;
+
+    const scaleColumn = document.createElement("td");
+    scaleColumn.append(scale_up_button);
+    scaleColumn.append(scale_down_button);
+    scaleColumn.append(scale_number);
+
+    row.appendChild(scaleColumn);
+
     // Create the exposed ports column
     const portsColumn = document.createElement("td");
     portsColumn.innerHTML = container.exposed_ports
@@ -1653,6 +1687,14 @@ function stopClicked() {
     });
 }
 
+function createScaleContainer(dockerComposePath, container, scale) {
+  return {
+    docker_compose_path: dockerComposePath.file_path,
+    container: container ? container.container_name : "",
+    scale: scale,
+  };
+}
+
 function createStartContainer(dockerComposePath, container) {
   return {
     docker_compose_path: dockerComposePath.file_path,
@@ -1669,6 +1711,41 @@ async function stopContainer(containerToStop) {
 
   genFetch(data, "stop-container").catch((error) => {
     hideLoader(containerToStop.container_name);
+  });
+}
+
+function getAmountOfScaledContainers(container) {
+  var amount = 0;
+  running_containers.forEach((c) => {
+    if (c.container_name === container.container_name) {
+      amount += 1;
+    }
+  });
+  return amount;
+}
+
+async function scaleContainer(container, add_or_remove) {
+  // get amount of container to scale
+  var curr_scale = getAmountOfScaledContainers(container);
+
+  if (add_or_remove === "add") {
+    curr_scale += 1;
+  } else {
+    curr_scale -= 1;
+  }
+
+  if (curr_scale < 0) {
+    return; // skip operations of negative scale, will fail anyways!
+  }
+
+  showToast(
+    `Scaling container: ${container.container_name} to ${curr_scale} instances!`,
+  );
+
+  data = createScaleContainer(dockerComposePath, container, curr_scale);
+  console.log(data);
+  genFetch(data, "scale").catch((error) => {
+    hideLoader(containerToStart.container_name);
   });
 }
 

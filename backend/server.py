@@ -84,6 +84,12 @@ class ContainerStatus(BaseModel):
     container_name: str
 
 
+class ContainerScale(BaseModel):
+    docker_compose_path: str
+    container: str
+    scale: int
+
+
 class ContainerInfo(BaseModel):
     container_name: str = []
     networks_used: List[str] = []
@@ -517,6 +523,40 @@ async def start_container(data: StartContainer):
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
+@app.post("/scale", response_model=bool)
+async def start_container(data: ContainerScale):
+    """
+    Scale single container.
+    """
+    try:
+        compose_data = read_compose_file(data.docker_compose_path)
+        container_name = data.container
+
+        if "services" in compose_data and container_name in compose_data["services"]:
+
+            await handle_docker_start_conflict(container_name)
+
+            val = [
+                "docker-compose",
+                "-f",
+                data.docker_compose_path,
+                "scale",
+                f"{data.container}={data.scale}",
+            ]
+
+            await awaitTask(val)
+
+            return True
+        else:
+            logger.warn(
+                f"Container '{container_name}' not found in the Docker Compose file."
+            )
+            return False
+    except Exception as e:
+        logger.error(f"Scale container => An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
+
 def build_string_of_containerlist(dataList):
     containers = []
     for data in dataList:
@@ -616,9 +656,13 @@ async def get_running_containers_with_networks():
 
         for container in all_containers:
             if container.status == "running":
+                name = container.name
+                if name.startswith("docker_"):
+                    name = name[7:].replace(f"_{name.split('_')[-1]}", "")
+
                 running_containers.append(
                     ContainerInfo(
-                        container_name=container.name,
+                        container_name=name,
                         networks_used=get_container_networks(container),
                     )
                 )

@@ -4,7 +4,7 @@ version: "3"
 
 services:
   webapp1:
-    container_name: webapp1
+    hostname: webapp1
     image: nginx:latest
     networks:
       - frontend
@@ -25,7 +25,7 @@ services:
       - NET_RAW
 
   owncontainer:
-    container_name: owncontainer
+    hostname: owncontainer
     image: grebtsew/own
     build:
       context: ./
@@ -38,7 +38,7 @@ services:
     restart: always
 
   webapp2:
-    container_name: webapp2
+    hostname: webapp2
     image: nginx:latest
     networks:
       - frontend
@@ -53,7 +53,7 @@ services:
     restart: always
 
   database1:
-    container_name: database1
+    hostname: database1
     image: postgres
     labels:
       - "group=database"
@@ -69,7 +69,7 @@ services:
     restart: always
 
   database2:
-    container_name: database2
+    hostname: database2
     image: postgres
     labels:
       - "group=database"
@@ -84,7 +84,7 @@ services:
     restart: always
 
   worker1:
-    container_name: worker1
+    hostname: worker1
     image: busybox
     labels:
       - "group=worker"
@@ -97,7 +97,7 @@ services:
     restart: always
 
   worker2:
-    container_name: worker2
+    hostname: worker2
     image: busybox
     labels:
       - "group=worker"
@@ -109,7 +109,7 @@ services:
     restart: always
 
   monitoring:
-    container_name: monitoring
+    hostname: monitoring
     image: prom/prometheus
     labels:
       - "group=monitoring"
@@ -131,13 +131,13 @@ services:
       - "network=backend"
       - "network=logging"
       - "other=true"
-    container_name: logging
+    hostname: logging
     image: fluentd
     network_mode: "host"
     restart: always
 
   cache:
-    container_name: cache
+    hostname: cache
     image: redis
     ports:
       - "6379:6379/tcp"
