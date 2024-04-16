@@ -1,5 +1,14 @@
 version: "3.8"
 
+volumes: # Specify your own volumes here
+  dc_volume:
+    name: dc_volume
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PROJECT_PATH} # link to /docker volume in container
+
 services:
   dcDeployControl:
     image: grebtsew/dcdc
@@ -11,6 +20,6 @@ services:
       - "80:80"
       - "8000:8000"
     volumes:
-      - ./${PROJECT_PATH}:/docker # arbitrary docker-compose project
+      - dc_volume:/docker # arbitrary docker-compose project
       - ./dcdc_logs:/app/frontend/logs # optionally: volume all system logs
       - /var/run/docker.sock:/var/run/docker.sock # gain docker control access

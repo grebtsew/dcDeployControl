@@ -8,5 +8,9 @@ RUN apt-get update
 
 RUN apt-get install iputils-ping -y
 
+RUN mkdir /data
+
+RUN touch /data/test.txt
+
 # Use an infinite loop to keep the container running
 CMD ["sh", "-c", "while true; do sleep 86400; done"]

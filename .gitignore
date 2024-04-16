@@ -48,3 +48,6 @@ coverage/
 coverage.xml
 coverage.html
 htmlcov
+
+/volume_data
+*/volume_data

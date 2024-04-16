@@ -2,6 +2,10 @@
 
 version: "3"
 
+volumes:
+  dc_volume:
+    external: true
+
 services:
   webapp1:
     hostname: webapp1
@@ -34,10 +38,12 @@ services:
       - frontend
       - all
     deploy:
-      replicas: 2
+      replicas: 1
     labels:
       - "default=true"
     restart: always
+    volumes:
+      - dc_volume:/volume_data
 
   webapp2:
     hostname: webapp2
