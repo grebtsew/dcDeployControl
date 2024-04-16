@@ -44,6 +44,7 @@ The main features include:
 - **Automatic detection and visualization of Networks** : Will parse docker-compose networks and automatically devide containers into appropriate groups.
 - **Automatic detection of external containers and Networks** : The visualization will each 10 second receive information about other contaners running in the docker environment and add them to the visualization.
 - **Start and stop any subsets of containers** : Creates a dynamic gui where containers can be easily started eighter one at a time or as a larger subset.
+- **Container Scaling up and down** : Scale the amount of containers to run. Use deploy - replicas to set default in docker-compose.
 - **Create clickable links** : Will add buttons on container cards to faster reach other applications.
 - **Label system** : Uses a label system, described above to let the user manipulate the visualization.
 - **Build and Clear function** : Build and clear functions has been added that runs the `build` and `down` command to clear up any issues with old running containers.

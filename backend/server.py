@@ -507,9 +507,11 @@ async def start_container(data: StartContainer):
                 "--force-recreate",
             ]
             if data.flags != "":
-                val.append(data.flags)
+                flags = data.flags.replace("-v", "")  # ignore volume flags!
+                val.append(flags)
 
             val.append(container_name)
+            val = list(filter(lambda x: x != "", val))
             await awaitTask(val)
 
             return True
@@ -745,7 +747,10 @@ async def stop_containers(data: StartContainer):
         docker_compose_path = data.docker_compose_path
         val = ["docker-compose", "-f", docker_compose_path, "down"]
         if data.flags != "":
-            val.append(data.flags)
+            flags = data.flags.replace("--build", "")  # ignore build flag!
+            val.append(flags)
+
+        val = list(filter(lambda x: x != "", val))
         await awaitTask(val)
         return True
     except Exception as e:

@@ -1259,6 +1259,27 @@ function toggleNetworkVisibility(network) {
   });
 }
 
+function createButton(_class, _id, innerHTML, color, click_func) {
+  var button = document.createElement("button");
+
+  // Check for null values and assign default values if necessary
+  _id = _id || ""; // If _id is null, assign an empty string
+  innerHTML = innerHTML || ""; // If innerHTML is null, assign an empty string
+  color = color || "black"; // If color is null, assign "black"
+
+  button.id = _id;
+  button.innerHTML = innerHTML;
+  button.className = _class;
+  button.style.color = color;
+
+  // Check if click_func is a valid function before adding the event listener
+  if (typeof click_func === "function") {
+    button.addEventListener("click", click_func);
+  }
+
+  return button;
+}
+
 function updateTable() {
   const containerTableBody = document.getElementById("containerTableBody");
   containerTableBody.innerHTML = "";
@@ -1296,18 +1317,26 @@ function updateTable() {
       loader.hidden = true;
 
       // Create start button icon
-      startButton = document.createElement("button");
-      startButton.innerHTML = '<i class="fa fa-play"></i>';
-      startButton.className = "smlbtn";
-      startButton.style.color = "green";
-      startButton.addEventListener("click", () => startContainer(container));
+      startButton = createButton(
+        "smlbtn",
+        null,
+        '<i class="fa fa-play"></i>',
+        "green",
+        function () {
+          startContainer(container);
+        },
+      );
 
       // Create stop button icon
-      stopButton = document.createElement("button");
-      stopButton.innerHTML = '<i class="fa fa-stop"></i> ';
-      stopButton.className = "smlbtn";
-      stopButton.style.color = "red";
-      stopButton.addEventListener("click", () => stopContainer(container));
+      stopButton = createButton(
+        "smlbtn",
+        null,
+        '<i class="fa fa-stop"></i> ',
+        "red",
+        function () {
+          stopContainer(container);
+        },
+      );
     }
     if (container.exposed_ports.length > 0) {
       const port = container.exposed_ports[0].split(":");
@@ -1325,12 +1354,14 @@ function updateTable() {
 
       // Create open website button
       if (!ignore_ports) {
-        openWebsiteButton = document.createElement("button");
-        openWebsiteButton.innerHTML = '<i class="fa fa-external-link"></i> ';
-        openWebsiteButton.className = "smlbtn";
-        openWebsiteButton.style.color = "white";
-        openWebsiteButton.addEventListener("click", () =>
-          openWebsite(`${protocol}://localhost:${p}/${container.path}`),
+        openWebsiteButton = createButton(
+          "smlbtn",
+          null,
+          '<i class="fa fa-external-link"></i> ',
+          "white",
+          function () {
+            openWebsite(`${protocol}://localhost:${p}/${container.path}`);
+          },
         );
       }
     }
@@ -1376,13 +1407,24 @@ function updateTable() {
 
     // Create the buttons column
     const buttonsColumn = document.createElement("td");
+
     if (controllable === true || controllable === "true") {
-      buttonsColumn.appendChild(loader);
-      buttonsColumn.appendChild(startButton);
-      buttonsColumn.appendChild(stopButton);
+      const loaderTd = document.createElement("td");
+      const startButtonTd = document.createElement("td");
+      const stopButtonTd = document.createElement("td");
+
+      loaderTd.appendChild(loader);
+      startButtonTd.appendChild(startButton);
+      stopButtonTd.appendChild(stopButton);
+
+      buttonsColumn.appendChild(loaderTd);
+      buttonsColumn.appendChild(startButtonTd);
+      buttonsColumn.appendChild(stopButtonTd);
     }
     if (!ignore_ports && container.exposed_ports.length > 0) {
-      buttonsColumn.appendChild(openWebsiteButton);
+      const openWebsiteButtonTd = document.createElement("td");
+      openWebsiteButtonTd.appendChild(openWebsiteButton);
+      buttonsColumn.appendChild(openWebsiteButtonTd);
     }
 
     row.appendChild(buttonsColumn);
@@ -1392,32 +1434,45 @@ function updateTable() {
     var scale_down_button;
     var scale_number;
 
-    scale_up_button = document.createElement("button");
-    scale_up_button.innerHTML = '<i class="fa fa-plus"></i>';
-    scale_up_button.className = "smlbtn";
-    scale_up_button.style.color = "blue";
-    scale_up_button.addEventListener("click", () =>
-      scaleContainer(container, "add"),
+    scale_up_button = createButton(
+      "smlbtn",
+      null,
+      '<i class="fa fa-plus"></i>',
+      "blue",
+      function () {
+        scaleContainer(container, "add");
+      },
     );
-
-    scale_down_button = document.createElement("button");
-    scale_down_button.innerHTML = '<i class="fa fa-minus"></i>';
-    scale_down_button.className = "smlbtn";
-    scale_down_button.style.color = "yellow";
-    scale_down_button.addEventListener("click", () =>
-      scaleContainer(container, "remove"),
+    scale_down_button = createButton(
+      "smlbtn",
+      null,
+      '<i class="fa fa-minus"></i>',
+      "yellow",
+      function () {
+        scaleContainer(container, "remove");
+      },
     );
-
-    scale_number = document.createElement("button");
-    scale_number.innerHTML = getAmountOfScaledContainers(container);
-    scale_number.className = "smlbtn";
-    scale_number.style.color = "white";
-    scale_number.id = `scale_number_${container.containerName}`;
+    scale_number = createButton(
+      "smlbtn",
+      `scale_number_${container.containerName}`,
+      getAmountOfScaledContainers(container),
+      "white",
+      null,
+    );
 
     const scaleColumn = document.createElement("td");
-    scaleColumn.append(scale_up_button);
-    scaleColumn.append(scale_down_button);
-    scaleColumn.append(scale_number);
+
+    const scaleUpTd = document.createElement("td");
+    const scaleDownTd = document.createElement("td");
+    const scaleNumberTd = document.createElement("td");
+
+    scaleUpTd.appendChild(scale_up_button);
+    scaleDownTd.appendChild(scale_down_button);
+    scaleNumberTd.appendChild(scale_number);
+
+    scaleColumn.append(scaleUpTd);
+    scaleColumn.append(scaleDownTd);
+    scaleColumn.append(scaleNumberTd);
 
     row.appendChild(scaleColumn);
 
@@ -1552,7 +1607,7 @@ function clearClicked() {
 
   showCardLoader("red");
 
-  const data = createStartContainer(dockerComposePath, "");
+  const data = createStartContainer(dockerComposePath, "", vflag);
 
   showLoader("clear");
   genFetch(data, "clear")
@@ -1695,11 +1750,11 @@ function createScaleContainer(dockerComposePath, container, scale) {
   };
 }
 
-function createStartContainer(dockerComposePath, container) {
+function createStartContainer(dockerComposePath, container, flags = flag) {
   return {
     docker_compose_path: dockerComposePath.file_path,
     container: container ? container.container_name : "",
-    flags: flag,
+    flags: flags,
   };
 }
 

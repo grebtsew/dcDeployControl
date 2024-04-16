@@ -256,12 +256,15 @@ td {
   line-height: 1;
   padding: 0;
   align-items: center;
-
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-th {
-  background-color: #666666;
+
+#buttons-column {
+  display: flex;
+  justify-content: center;
+  width: 100px; /* Adjust as needed */
 }
+
 .toggle-switch {
   position: relative;
   display: inline-block;
