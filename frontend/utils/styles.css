@@ -194,6 +194,11 @@ h1 {
   text-align: center;
 }
 
+#tddContainer {
+  width: 100%;
+  height: 100%;
+}
+
 #control-panel {
   width: 350px;
   height: 10%;
@@ -309,11 +314,6 @@ input:checked + .slider:before {
 }
 .visible {
   display: block;
-}
-
-.table-container {
-  position: fixed;
-  z-index: 1000;
 }
 
 .table-container {

@@ -1573,6 +1573,133 @@ function toggleClicked(containerName, toggleState) {
   }
 }
 
+var Graph = NaN;
+const tddContainer = document.getElementById("tddContainer");
+
+function convertTo3DForceGraph() {
+  // Extract node and edge data from the vis.js graph
+  var _nodes = nodes.get();
+  var _edges = edges.get();
+
+  var node_names = [];
+  containers.forEach((container) => {
+    const checkbox = document.getElementById(
+      `checkbox-container-${container.container_name}`,
+    );
+
+    if (checkbox.checked === true) {
+      node_names.push(container.container_name);
+    }
+  });
+
+  external_containers.forEach((container) => {
+    const checkbox = document.getElementById(
+      `checkbox-container-${container.container_name}`,
+    );
+
+    if (checkbox.checked === true) {
+      node_names.push(container.container_name);
+    }
+  });
+
+  // Filter nodes based on visibility status
+  var visibleNodes = _nodes.filter((node) => node_names.includes(node.id));
+
+  // Filter edges based on visibility status
+  var visibleEdges = _edges.filter((edge) => {
+    return node_names.includes(edge.from) && node_names.includes(edge.to);
+  });
+
+  // Create graphData and update ForceGraph3D as before
+  var graphData = {
+    nodes: visibleNodes.map(function (node) {
+      return { id: node.id, label: node.label, color: node.color };
+    }),
+    links: visibleEdges.map(function (edge) {
+      return { source: edge.from, target: edge.to, color: edge.color };
+    }),
+  };
+
+  // Initialize ForceGraph3D inside the specified container
+  Graph = ForceGraph3D()(tddContainer)
+    .graphData(graphData)
+    .nodeLabel("label")
+    .linkWidth(2)
+    .nodeColor((node) => node.color)
+    .linkColor("color")
+    .nodeVisibility(true)
+    .linkThreeObjectExtend(true)
+    .showNavInfo(true);
+
+  // Add close button to the graph container
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "Close 3d View";
+  closeButton.style.position = "absolute";
+  closeButton.style.top = "50px";
+  closeButton.style.right = "10px";
+  closeButton.addEventListener("click", function () {
+    tddContainer.classList.toggle("visible");
+    tddContainer.classList.toggle("hidden");
+  });
+  tddContainer.appendChild(closeButton);
+
+  return Graph;
+}
+
+function threeDMode() {
+  tddContainer.classList.toggle("visible");
+  tddContainer.classList.toggle("hidden");
+  convertTo3DForceGraph();
+}
+
+function animateGraph() {
+  // Get a random node ID from the nodes
+  var randomNodeId =
+    containers[Math.floor(Math.random() * containers.length)].container_name;
+
+  // Generate random target position
+  const randomX = (Math.random() - 0.5) * 1000; // Generate random X position (-1000 to 1000)
+  const randomY = (Math.random() - 0.5) * 1000; // Generate random Y position (-1000 to 1000)
+
+  // Get the current position of the node
+  var nodePosition = network.getPositions([randomNodeId])[randomNodeId];
+
+  // Calculate step sizes for smooth movement
+
+  const totalSteps = 100;
+  const stepX = (randomX - nodePosition.x) / totalSteps;
+  const stepY = (randomY - nodePosition.y) / totalSteps;
+
+  // Perform animation in multiple steps
+  var currentStep = 0;
+  var animationInterval = setInterval(function () {
+    if (currentStep >= totalSteps) {
+      clearInterval(animationInterval);
+      return;
+    }
+
+    // Update node position
+    var newX = nodePosition.x + stepX * currentStep;
+    var newY = nodePosition.y + stepY * currentStep;
+    network.moveNode(randomNodeId, newX, newY);
+
+    currentStep++;
+  }, 10); // Adjust interval for smoother animation
+}
+
+isShowTime = false;
+showTime_interval = NaN;
+
+function showTime() {
+  const checkbox = document.getElementById("showtime");
+
+  if (checkbox.checked) {
+    showTime_interval = setInterval(animateGraph, 2000);
+  } else {
+    clearInterval(showTime_interval);
+  }
+}
+
 function internetClicked() {
   tableContainer.classList.toggle("visible");
   tableContainer.classList.toggle("hidden");

@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="./lib/toastify.css" />
     <link rel="stylesheet" href="./lib/all.min.css" />
     <script type="text/javascript" src="./lib/toastify.js"></script>
+    <script type="text/javascript" src="./lib/3d-force-graph"></script>
   </head>
   <body>
     <header>
@@ -16,6 +17,7 @@
       <div id="clock"></div>
     </header>
 
+    <div id="tddContainer" class="tdcontainer hidden"></div>
     <main>
       <div id="logsContainer" class="log-container">
         <div class="log-header">
@@ -106,6 +108,13 @@
               >Clear Volumes <i class="fas fa-hdd"></i>
             </label>
           </div>
+          <div class="card-network" onclick="threeDMode()">
+            <label for="3d">3D <i class="fas fa-cube icon"></i> </label>
+          </div>
+          <div class="card-network" onclick="showTime()">
+            <input id="showtime" type="checkbox" />
+            <label for="showtime">Cinema <i class="fas fa-desktop"></i> </label>
+          </div>
 
           <div class="card-network">
             <input
@@ -182,11 +191,23 @@
         });
       });
 
+      var container1 = document.getElementById("control-panel");
+      var container2 = document.getElementById("graph-container");
+      var container3 = document.getElementById("tddContainer");
+
       let resizeTimer;
       window.addEventListener("resize", function () {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function () {
-          location.reload();
+          container1.style.width = "20%";
+          container2.style.width = "80%";
+
+          const windowWidth = window.innerWidth;
+          const windowHeight = window.innerHeight;
+
+          container3.style.width = windowWidth + "px";
+          container3.style.height = windowHeight + "px";
+          //location.reload();
         }, 500);
       });
 
@@ -234,7 +255,6 @@
       const tableContainer = document.getElementById("tableContainer");
       makeResizable(tableContainer);
 
-      //const tableContent = document.getElementById("tableContent");
       dragElement(tableContainer);
       function dragElement(elmnt) {
         let pos1 = 0,

@@ -1,6 +1,6 @@
 # Example docker-compose file with several connected links
 
-version: "3"
+version: "3.8"
 
 volumes:
   dc_volume:
