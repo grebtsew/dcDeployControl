@@ -51,6 +51,8 @@ The main features include:
 - **Import and Export functions**: Docker save and load all images in system can be called. Only the volume folder can be used for import and export.
 - **Websocket logging link**: Show live logs from backend to better track system.
 - **Network Access Table**: A control system for giving containers temporary internet access.
+- **3d graph**: A 3d graph representation of system.
+- **Showtime**: A demo mode, where nodes are random dragged, to show physics effect.
 
 # General tips
 
@@ -100,6 +102,7 @@ The project is built on a multitude of libraries, the main once are listed below
 - **PyDocker** - Control docker in python.
 - **FastApi** - Create fast API backends in python.
 - **Uvicorn** - Webserver host in python.
+- **3d-force-graph** - 3d graphs in javascript.
 
 # License
 
