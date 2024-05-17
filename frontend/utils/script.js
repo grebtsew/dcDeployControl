@@ -1616,7 +1616,20 @@ function convertTo3DForceGraph() {
       return { id: node.id, label: node.label, color: node.color };
     }),
     links: visibleEdges.map(function (edge) {
-      return { source: edge.from, target: edge.to, color: edge.color };
+      const srcNode = visibleNodes.find((node) => node.id === edge.from);
+      const dstNode = visibleNodes.find((node) => node.id === edge.to);
+
+      // Determine if both source and target nodes are green
+      const areBothGreen =
+        srcNode.color === "green" && dstNode.color === "green";
+
+      return {
+        source: edge.from,
+        target: edge.to,
+        color: edge.color,
+        particles: areBothGreen ? 4 : 0,
+        speed: areBothGreen ? 1 : 0,
+      };
     }),
   };
 
@@ -1626,10 +1639,40 @@ function convertTo3DForceGraph() {
     .nodeLabel("label")
     .linkWidth(2)
     .nodeColor((node) => node.color)
-    .linkColor("color")
+    .linkColor((link) => link.color)
+    .linkDirectionalParticleSpeed((link) => link.speed * 0.01)
+    .linkDirectionalParticles((link) => link.particles)
     .nodeVisibility(true)
     .linkThreeObjectExtend(true)
-    .showNavInfo(true);
+    .showNavInfo(true)
+    .linkCurvature(0.1)
+    .nodeThreeObject((node) => {
+      // Create a group to hold the node sphere and text label
+      const group = new THREE.Group();
+
+      // Create the node sphere
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(5),
+        new THREE.MeshBasicMaterial({ color: node.color }),
+      );
+      group.add(sphere);
+
+      // Create the text sprite for the node label
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: new THREE.CanvasTexture(
+            createTextTexture(node.label, node.color),
+          ),
+          transparent: true,
+        }),
+      );
+      sprite.scale.set(20, 8, 1); // Adjust the size as needed
+      sprite.position.set(0, 12, 0); // Adjust the position as needed
+      sprite.renderOrder = 100;
+      group.add(sprite);
+
+      return group;
+    });
 
   // Add close button to the graph container
   const closeButton = document.createElement("button");
@@ -1646,6 +1689,38 @@ function convertTo3DForceGraph() {
   return Graph;
 }
 
+window.addEventListener("resize", () => {
+  Graph.width(window.innerWidth);
+  Graph.height(window.innerHeight);
+});
+
+// Function to create text texture with a black border
+function createTextTexture(text, color = "white") {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  const fontSize = 52;
+  context.font = `${fontSize}px Arial`;
+
+  // Adjust the canvas size to fit the text
+  const textWidth = context.measureText(text).width + 2;
+  canvas.width = textWidth;
+  canvas.height = fontSize * 1.2; // Add some padding
+
+  // Set text style and fill the text
+  context.font = `${fontSize}px Arial`;
+  context.fillStyle = color;
+  context.strokeStyle = "black";
+  context.lineWidth = 2;
+  context.opacity = 0.2;
+
+  // Draw text stroke
+  context.strokeText(text, 0, fontSize);
+
+  // Draw filled text
+  context.fillText(text, 0, fontSize);
+
+  return canvas;
+}
 function threeDMode() {
   tddContainer.classList.toggle("visible");
   tddContainer.classList.toggle("hidden");

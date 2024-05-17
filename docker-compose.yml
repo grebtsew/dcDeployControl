@@ -19,6 +19,7 @@ services:
     ports:
       - "80:80"
       - "8000:8000"
+    restart: always
     volumes:
       - dc_volume:/docker # arbitrary docker-compose project
       - ./dcdc_logs:/app/frontend/logs # optionally: volume all system logs
