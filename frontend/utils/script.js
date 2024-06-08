@@ -1636,6 +1636,7 @@ function convertTo3DForceGraph() {
   // Initialize ForceGraph3D inside the specified container
   Graph = ForceGraph3D()(tddContainer)
     .graphData(graphData)
+    .backgroundColor("#000000")
     .nodeLabel("label")
     .linkWidth(2)
     .nodeColor((node) => node.color)
@@ -1673,6 +1674,9 @@ function convertTo3DForceGraph() {
 
       return group;
     });
+
+  Graph.width(window.innerWidth);
+  Graph.height(window.innerHeight);
 
   // Add close button to the graph container
   const closeButton = document.createElement("button");
